@@ -59,7 +59,7 @@
   .chart-wrap { position: relative; height: 170px; }
   .chart-wrap.pie-wrap { height: 260px; }
   .chart-empty { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-faint); font-size: 10.5px; }
-  #accountGrid, #leadGrid, #oppGrid, #abmMatchedGrid, #abmUnmatchedGrid { background: var(--bg-1); border-radius: 8px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 6px; }
+  #accountGrid, #leadGrid, #oppGrid, #preAccountGrid, #preOppGrid, #preUnmatchedGrid { background: var(--bg-1); border-radius: 8px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 6px; }
   .gridjs-th { font-size: 10.5px; }
   .gridjs-td { font-size: 11px; }
   .footnote { font-size: 10px; color: var(--text-faint); margin-top: 8px; line-height: 1.6; }
@@ -67,6 +67,11 @@
   .tag { display: inline-block; font-size: 9.5px; padding: 1px 6px; border-radius: 999px; margin: 1px 2px 1px 0; }
   .tag-engaged { background: var(--red-soft); color: #e8caca; font-weight: 600; }
   .tag-netnew { background: var(--green-soft); color: #bcd9ce; font-weight: 600; }
+
+  .tab-nav { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
+  .tab-btn { background: none; border: none; color: var(--text-faint); font-size: 12px; font-weight: 600; padding: 8px 14px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .tab-btn:hover { color: var(--text-dim); }
+  .tab-btn.active { color: var(--text); border-bottom-color: var(--blue); }
 
   .funnel-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 0 3px 0; }
   .funnel-row { height: 28px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 11px; font-weight: 600; border-radius: 4px; white-space: nowrap; }
@@ -107,29 +112,35 @@
 <h1>AI Infra Summit 2026 — ABX Engagement Dashboard <button class="info-icon-btn" onclick="toggleInfoPopover('mainInfoBanner')" title="What is this dashboard?">?</button></h1>
 <div class="subtitle">Source: live Salesforce sync (<b>clockwork-sfdc-sync-aiinfra26</b>) &middot; campaign <a href="https://clockworksystems.lightning.force.com/lightning/r/Campaign/701TV00000tqRm2YAE/view" target="_blank" rel="noopener" style="color:var(--blue)">701TV00000tqRm2YAE</a> &middot; auto-refreshes every 6 hours &middot; <span id="loadedAt"></span></div>
 
-<div class="banner" id="mainInfoBanner" style="display:none;">Live data pulled directly from Salesforce via a scheduled GitHub Action (clockwork-sfdc-sync-aiinfra26). Tracks two levels: (1) COMPANY-level engagement (did anyone at this account already know us before AI Infra Summit?) and (2) PERSON-level funnel stage (where is the specific contact in the pipeline?).</div>
+<div class="banner" id="mainInfoBanner" style="display:none;">Live data pulled directly from Salesforce via a scheduled GitHub Action (clockwork-sfdc-sync-aiinfra26). Two tabs: Pre-Event Analysis (attendee roster cross-referenced against ABM tiers + open pipeline, ahead of the event) and Event &amp; Post-Event (live booth-scan funnel, once Leads start flowing in from the campaign).</div>
 
-<div id="dataBanner"></div>
+<div class="tab-nav">
+  <button class="tab-btn active" data-tab="preEvent" onclick="showTab('preEvent')">Pre-Event Analysis</button>
+  <button class="tab-btn" data-tab="eventPost" onclick="showTab('eventPost')">Event &amp; Post-Event</button>
+</div>
 
-<div id="mainContent"></div>
+<div class="tab-panel" id="tab-preEvent">
+  <div id="preEventContent"></div>
+</div>
 
-<div id="yoyContent"></div>
-
-<div id="abmCoverageContent"></div>
+<div class="tab-panel" id="tab-eventPost" style="display:none;">
+  <div id="dataBanner"></div>
+  <div id="mainContent"></div>
+  <div id="yoyContent"></div>
+</div>
 
 <div class="footnote">
   <span class="methodology-wrap">
     <b>Methodology</b> <span class="info-icon-btn" title="Hover for methodology details">?</span>
     <div class="methodology-tooltip">
-      &bull; <b>Company Already Engaged</b> = Salesforce shows an existing Opportunity (any owner/team), an existing Contact, or another open Lead tied to that company's domain, from OUTSIDE this campaign's leads — i.e., someone at that company was already talking to us before/regardless of who we met via this campaign.<br/>
+      &bull; <b>Pre-Event Analysis</b>: cross-references the uploaded AI Infra Summit 2026 attendee/speaker roster (209 companies, 280 people) against a live, uncapped pull of every ABM-tiered Salesforce Account, matched by normalized company name (punctuation and common legal suffixes stripped) — not domain, since the roster has none. "Open Opportunity" = not a Closed stage, Type not renewal-like, Close Date in the current calendar year; this is a best-effort reproduction of a typical open-pipeline filter, not a guaranteed match to any specific saved report. "Event Family" lightly groups a few known raw Campaign Names (RAISE 2025/2026, PyTorch 2025, Webinars) — a hand-maintained pattern list, not a Salesforce field. Company-name matching is inherently fuzzier than the domain-based matching used elsewhere on this page — treat unmatched companies as a starting point for manual review, not a definitive gap list.<br/>
+      &bull; <b>Company Already Engaged</b> (Event &amp; Post-Event tab) = Salesforce shows an existing Opportunity (any owner/team), an existing Contact, or another open Lead tied to that company's domain, from OUTSIDE this campaign's leads — i.e., someone at that company was already talking to us before/regardless of who we met via this campaign.<br/>
       &bull; <b>Qualified</b> = real Salesforce Lead Status of "In Progress (MQL)" or "In Progress (SAL)" — not an estimate.<br/>
       &bull; <b>Net New</b> Opportunity requires Lead Source exactly "AI Infra Summit 2026 Santa Clara" AND Created Date on/after 2026-09-15; everything else domain-matched is classified "Existing" pipeline.<br/>
       &bull; <b>Pipeline default value is $200,000</b> per account with no real open Opportunity.<br/>
       &bull; "GTM persona" is a heuristic classification from job-title keywords, not a Salesforce field — treat as a starting point, not ground truth.<br/>
-      &bull; "Company segment mix" (Hyperscaler / Neocloud / Enterprise / Startup / Other) from the RAISE template is intentionally omitted here — that was a manual judgment call per account, not synced data, and there are no accounts yet to classify.<br/>
       &bull; Data refreshes automatically every 6 hours via the clockwork-sfdc-sync-aiinfra26 GitHub Action; re-open this page to see the latest snapshot as of load time.<br/>
-      &bull; <b>Year-over-Year (2025 vs 2026)</b>: 2025 figures come from a saved Salesforce report (Contacts already converted from Leads, tied to the "Booth Scans | AI Infra Summit 2025" campaign, at In Progress (SAL) or Open Deal stage) — a post-event snapshot. 2026 figures come from the live Lead/CampaignMember sync for this year's campaign, captured pre-event. Different object types (Contact vs. Lead) at different funnel stages, captured at different points in each event's lifecycle — this is directional context, not a strict apples-to-apples comparison.<br/>
-      &bull; <b>ABM Tier Coverage</b>: cross-references the uploaded AI Infra Summit 2026 attendee/speaker roster against Salesforce's "ABM Tier accounts" report (00OTV00000SAiyv2AD), matched by normalized company name (not domain, since the roster doesn't include one) — punctuation and common suffixes (Inc, LLC, Corp, Group, Technologies, etc.) are stripped before comparing, so close-but-not-exact name variants may still be missed. The Salesforce Reports API caps a single report run at 2,000 detail rows, so the ABM account list itself may not cover every tiered account in the org.
+      &bull; <b>Year-over-Year (2025 vs 2026)</b>: 2025 figures come from a saved Salesforce report (Contacts already converted from Leads, tied to the "Booth Scans | AI Infra Summit 2025" campaign, at In Progress (SAL) or Open Deal stage) — a post-event snapshot. 2026 figures come from the live Lead/CampaignMember sync for this year's campaign, captured pre-event. Different object types (Contact vs. Lead) at different funnel stages, captured at different points in each event's lifecycle — this is directional context, not a strict apples-to-apples comparison.
     </div>
   </span>
 </div>
@@ -150,12 +161,21 @@ function toggleInfoPopover(id) {
   el.style.display = (el.style.display === 'none' || !el.style.display) ? 'block' : 'none';
 }
 
+function showTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  document.getElementById('tab-preEvent').style.display = name === 'preEvent' ? '' : 'none';
+  document.getElementById('tab-eventPost').style.display = name === 'eventPost' ? '' : 'none';
+}
+
 function esc(s) {
   return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 function fmtMoney(n) {
   n = Number(n) || 0;
   return '$' + n.toLocaleString('en-US');
+}
+function sfdcLinkCell(link) {
+  return link ? gridjs.html('<a href="' + esc(link) + '" target="_blank" rel="noopener" style="color:var(--blue)">Open</a>') : '—';
 }
 
 async function fetchJson(path) {
@@ -317,67 +337,95 @@ function renderYoY(report2025, meta2026, byRep2026) {
   ]);
 }
 
-function renderAbmCoverage(data) {
+function renderPreEventAnalysis(data) {
   const s = data.summary || {};
-  const matched = data.matched || [];
-  const unmatched = data.unmatched || [];
+  const accounts = data.accounts || [];
+  const unmatched = data.unmatched_companies || [];
+  const opps = data.opportunities || [];
   const tierOrder = ['Tier 1', 'Tier 2', 'Tier 3', 'Tier 4', 'Untiered'];
-  const tierLabels = tierOrder.filter(t => (s.tier_company_counts || {})[t] || (s.tier_attendee_counts || {})[t]);
-  const matchPct = s.total_companies ? Math.round((s.matched_companies / s.total_companies) * 100) : 0;
+  const tierBreakdown = s.tier_breakdown || {};
+  const tierLabels = tierOrder.filter(t => tierBreakdown[t]);
+  const sourceAttribution = s.source_attribution || {};
+  const sourceLabels = Object.keys(sourceAttribution).sort((a, b) => sourceAttribution[b].opportunities - sourceAttribution[a].opportunities);
+  const genDate = data.generated_at ? new Date(data.generated_at).toLocaleString() : '—';
 
   const html = `
-    <h2 class="section">ABM Tier Coverage: Attendee Roster vs. Salesforce <button class="info-icon-btn" onclick="toggleInfoPopover('abmInfoBanner')" title="How is this built?">?</button></h2>
-    <div class="banner" id="abmInfoBanner" style="display:none;">Cross-references the uploaded AI Infra Summit 2026 attendee/speaker roster (${s.total_attendees} people, ${s.total_companies} companies) against Salesforce's ABM Tier accounts report, matched by normalized company name. See the Methodology footnote for match-quality caveats and the Reports API's 2,000-row cap.</div>
+    <div class="subtitle">Attendee/speaker roster (209 companies, 280 people) cross-referenced live against Salesforce ABM tiers &middot; snapshot generated ${esc(genDate)}</div>
     <div class="kpi-row">
-      <div class="kpi-card"><div class="name">Total Attendees</div><div class="stat-value">${s.total_attendees ?? 0}</div><div class="stat-sub">from uploaded roster</div></div>
-      <div class="kpi-card"><div class="name">Companies Represented</div><div class="stat-value">${s.total_companies ?? 0}</div><div class="stat-sub">unique companies attending</div></div>
-      <div class="kpi-card"><div class="name">Companies Matched to ABM Tier</div><div class="stat-value">${s.matched_companies ?? 0}</div><div class="stat-sub">${matchPct}% of attending companies</div></div>
-      <div class="kpi-card"><div class="name">Attendees at Tiered Accounts</div><div class="stat-value">${s.attendees_at_matched_companies ?? 0}</div><div class="stat-sub">of ${s.total_attendees ?? 0} total attendees</div></div>
+      <div class="kpi-card"><div class="name">Attending Accounts (Tiered)</div><div class="stat-value">${s.attending_accounts ?? 0}</div><div class="stat-sub">matched to a Salesforce ABM tier</div></div>
+      <div class="kpi-card"><div class="name">Accounts w/ Open Opportunity</div><div class="stat-value">${s.accounts_with_open_opportunity ?? 0}</div><div class="stat-sub">${s.attending_accounts ? Math.round((s.accounts_with_open_opportunity / s.attending_accounts) * 100) : 0}% of attending accounts</div></div>
+      <div class="kpi-card"><div class="name">Open Pipeline (Attending Accounts)</div><div class="stat-value">${fmtMoney(s.open_pipeline_total)}</div><div class="stat-sub">real open Opportunity amounts</div></div>
+      <div class="kpi-card"><div class="name">Opps Tied to Named Campaign</div><div class="stat-value">${s.opportunities_tied_to_named_campaign ?? 0}</div><div class="stat-sub">of the open opportunities above</div></div>
     </div>
     <div class="charts-row">
-      <div class="chart-card" style="flex: 1 1 100%;">
-        <h3>ABM tier breakdown — companies vs. attendees</h3>
-        <div class="hint">Companies matched to each tier, and how many attendees come from those companies</div>
-        <div class="chart-wrap"><canvas id="abmTierChart"></canvas></div>
-      </div>
+      <div class="chart-card"><h3>Attending accounts by ABM tier</h3><div class="hint">Accounts, and how many carry an open opportunity</div><div class="chart-wrap"><canvas id="preTierChart"></canvas></div></div>
+      <div class="chart-card"><h3>Open pipeline by ABM tier</h3><div class="hint">Sum of real open Opportunity amounts</div><div class="chart-wrap"><canvas id="preTierPipelineChart"></canvas></div></div>
+      <div class="chart-card"><h3>Opportunity source attribution</h3><div class="hint">Original Lead Source of each open opportunity</div><div class="chart-wrap pie-wrap"><canvas id="preSourceChart"></canvas></div></div>
     </div>
+
     <details class="table-drop" open>
-      <summary>Attending companies matched to an ABM tier <span class="drop-count">— ${matched.length} compan${matched.length===1?'y':'ies'}</span></summary>
-      <div id="abmMatchedGrid"></div>
+      <summary>Tier mapping — all attending accounts <span class="drop-count">— ${accounts.length} account${accounts.length===1?'':'s'}</span></summary>
+      <div id="preAccountGrid"></div>
     </details>
+
+    <details class="table-drop">
+      <summary>Opportunity source &amp; campaign attribution <span class="drop-count">— ${opps.length} open opportunit${opps.length===1?'y':'ies'}</span></summary>
+      <div id="preOppGrid"></div>
+    </details>
+
     <details class="table-drop">
       <summary>Attending companies with no ABM tier match <span class="drop-count">— ${unmatched.length} compan${unmatched.length===1?'y':'ies'}</span></summary>
-      <div id="abmUnmatchedGrid"></div>
+      <div id="preUnmatchedGrid"></div>
     </details>
   `;
-  document.getElementById('abmCoverageContent').insertAdjacentHTML('beforeend', html);
+  document.getElementById('preEventContent').innerHTML = html;
 
-  renderGroupedBarChart('abmTierChart', tierLabels, [
-    { label: 'Companies', data: tierLabels.map(t => (s.tier_company_counts || {})[t] || 0), backgroundColor: '#abbed9' },
-    { label: 'Attendees', data: tierLabels.map(t => (s.tier_attendee_counts || {})[t] || 0), backgroundColor: '#83b7a4' },
+  renderGroupedBarChart('preTierChart', tierLabels, [
+    { label: 'Accounts', data: tierLabels.map(t => tierBreakdown[t].accounts || 0), backgroundColor: '#abbed9' },
+    { label: 'With Open Opp', data: tierLabels.map(t => tierBreakdown[t].accounts_with_opp || 0), backgroundColor: '#83b7a4' },
   ]);
+  renderGroupedBarChart('preTierPipelineChart', tierLabels, [
+    { label: 'Open Pipeline ($)', data: tierLabels.map(t => tierBreakdown[t].open_pipeline || 0), backgroundColor: '#ccb886' },
+  ]);
+  renderPieChart('preSourceChart', Object.fromEntries(sourceLabels.map(l => [l, sourceAttribution[l].opportunities])));
 
-  if (matched.length) {
+  if (accounts.length) {
     new gridjs.Grid({
-      columns: ['Company', 'ABM Tier', 'Owner', 'Industry', 'GPU Segment', 'ICP Fit', 'Attendees', 'Attendee Names'],
-      data: matched.map(m => [m.company, m.tier, m.owner, m.industry, m.gpu_segment, m.icp_fit, m.attendee_count,
-        (m.attendees || []).map(p => p.name).join(', ')]),
+      columns: ['ABM Tier', 'Account', 'Owner', 'GPU Segment', 'Industry', 'Target Account', 'ICP Fit',
+        'Has Open Opp', 'Stage', 'Amount', 'Best Contact', 'Account (SFDC)', 'Opportunity (SFDC)'],
+      data: accounts.map(a => [a.tier, a.company, a.owner, a.gpu_segment, a.industry,
+        a.target_account ? 'Yes' : 'No', a.icp_account, a.has_open_opportunity ? 'Yes' : 'No',
+        a.stage, a.amount != null ? fmtMoney(a.amount) : '—', a.best_contact || '—',
+        sfdcLinkCell(a.account_sfdc_link), sfdcLinkCell(a.sfdc_link)]),
       search: true, sort: true, resizable: true, pagination: { limit: 25 },
       style: { table: { 'font-size': '11px' } },
-    }).render(document.getElementById('abmMatchedGrid'));
+    }).render(document.getElementById('preAccountGrid'));
   } else {
-    document.getElementById('abmMatchedGrid').innerHTML = '<div class="chart-empty" style="height:60px;">No matches yet.</div>';
+    document.getElementById('preAccountGrid').innerHTML = '<div class="chart-empty" style="height:60px;">No matched accounts yet.</div>';
+  }
+
+  if (opps.length) {
+    new gridjs.Grid({
+      columns: ['Account', 'ABM Tier', 'Owner', 'Opportunity', 'Stage', 'Amount', 'Close Date',
+        'Lead Source', 'Primary Campaign (raw)', 'Event Family', 'Salesforce'],
+      data: opps.map(o => [o.account, o.tier, o.owner, o.opportunity_name, o.stage, fmtMoney(o.amount),
+        o.close_date, o.lead_source, o.primary_campaign_raw || '—', o.event_family || '—', sfdcLinkCell(o.sfdc_link)]),
+      search: true, sort: true, resizable: true, pagination: { limit: 25 },
+      style: { table: { 'font-size': '11px' } },
+    }).render(document.getElementById('preOppGrid'));
+  } else {
+    document.getElementById('preOppGrid').innerHTML = '<div class="chart-empty" style="height:60px;">No open opportunities matched yet.</div>';
   }
 
   if (unmatched.length) {
     new gridjs.Grid({
       columns: ['Company', 'Attendees', 'Attendee Names'],
-      data: unmatched.map(m => [m.company, m.attendee_count, (m.attendees || []).map(p => p.name).join(', ')]),
+      data: unmatched.map(u => [u.company, u.attendee_count, (u.attendees || []).map(p => p.name).join(', ')]),
       search: true, sort: true, resizable: true, pagination: { limit: 25 },
       style: { table: { 'font-size': '11px' } },
-    }).render(document.getElementById('abmUnmatchedGrid'));
+    }).render(document.getElementById('preUnmatchedGrid'));
   } else {
-    document.getElementById('abmUnmatchedGrid').innerHTML = '<div class="chart-empty" style="height:60px;">Every attending company matched.</div>';
+    document.getElementById('preUnmatchedGrid').innerHTML = '<div class="chart-empty" style="height:60px;">Every attending company matched.</div>';
   }
 }
 
@@ -399,7 +447,6 @@ function renderBarChart(canvasId, counts, label) {
 }
 
 function renderKpis(meta, accounts) {
-  const netNewOpps = 0; // populated once real opportunities exist (see origin field)
   const kpis = [
     ['Distinct Companies', meta.distinct_companies ?? 0, 'unique accounts on this campaign'],
     ['Net-New Companies', meta.companies_net_new ?? 0, 'no prior Opportunity, Contact, or open Lead'],
@@ -494,7 +541,18 @@ function renderCharts(leads, opps, accounts, byRep) {
   }
 }
 
-(async function init() {
+async function initPreEvent() {
+  try {
+    const preEvent = await fetchJson('data/pre_event_analysis.json');
+    renderPreEventAnalysis(preEvent);
+  } catch (err) {
+    console.warn('Pre-event analysis unavailable:', err);
+    document.getElementById('preEventContent').innerHTML =
+      '<div class="banner warn">Pre-event analysis data not available yet (data/pre_event_analysis.json). This is wired and will populate once the sync workflow finishes running with the attendee roster config in place.</div>';
+  }
+}
+
+async function initEventPost() {
   try {
     const [meta, leads, opps, accounts, byRep] = await Promise.all([
       fetchJson('data/meta.json'),
@@ -521,21 +579,17 @@ function renderCharts(leads, opps, accounts, byRep) {
         '<h2 class="section">Year-over-Year: 2025 vs 2026</h2><div class="banner warn">2025 comparison report data not available yet (data/report_' + esc(REPORT_2025_ID) + '.json).</div>';
     }
 
-    try {
-      const abmCrossref = await fetchJson('data/attendee_abm_crossref.json');
-      renderAbmCoverage(abmCrossref);
-    } catch (abmErr) {
-      console.warn('ABM tier cross-reference unavailable:', abmErr);
-      document.getElementById('abmCoverageContent').innerHTML =
-        '<h2 class="section">ABM Tier Coverage: Attendee Roster vs. Salesforce</h2><div class="banner warn">Attendee/ABM tier cross-reference data not available yet (data/attendee_abm_crossref.json).</div>';
-    }
-
     document.getElementById('loadedAt').textContent = 'loaded ' + new Date().toLocaleString();
   } catch (err) {
     console.error(err);
     document.getElementById('dataBanner').innerHTML =
       '<div class="banner warn">Error loading data from ' + esc(REPO_NAME) + ': ' + esc(err.message) + '. If this repo is private, raw.githubusercontent.com fetches will fail from a public Netlify site — it needs to be public for this page to work.</div>';
   }
+}
+
+(function init() {
+  initPreEvent();
+  initEventPost();
 })();
 </script>
 </body>
