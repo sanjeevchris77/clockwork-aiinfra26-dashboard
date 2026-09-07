@@ -2,464 +2,374 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>RAISE Event Campaign Dashboard</title>
+<title>AI Infra Summit 2026 — ABX Engagement Dashboard</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridjs@5.0.2/dist/theme/mermaid.min.css" integrity="sha384-jZvDSsmGB9oGGT/4l9bHXGoAv1OxvG/cFmSo0dZaSqmBgvQTKDBFAMftlXTmMbNW" crossorigin="anonymous">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/gridjs@5.0.2/dist/gridjs.umd.js" integrity="sha384-/XXDzxe4FsGiAe50i/u9pY/Vy/uX654MHB1xoc1BJNnH1WXHhqHga9g3q5tF4gj7" crossorigin="anonymous"></script>
 <style>
-  :root { color-scheme: light; }
+  :root {
+    color-scheme: dark;
+    --bg: #0a0b0d;
+    --bg-1: #131519;
+    --bg-2: #1a1d23;
+    --bg-3: #20242b;
+    --border: #2a2e37;
+    --border-soft: #23262d;
+    --text: #e7e9ec;
+    --text-dim: #9aa2af;
+    --text-faint: #6b7280;
+    --blue: #abbed9;
+    --blue-soft: #1c2a44;
+    --purple: #d1cae7;
+    --purple-soft: #241f3d;
+    --green: #83b7a4;
+    --green-soft: #12271f;
+    --red: #e1bbbb;
+    --red-soft: #2a1616;
+    --amber: #ccb886;
+  }
   * { box-sizing: border-box; }
   body {
     margin: 0;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background: #f7f7f8;
-    color: #1f2328;
-    padding: 20px;
+    background: var(--bg);
+    color: var(--text);
+    padding: 14px;
+    font-size: 13px;
   }
-  h1 { font-size: 20px; margin: 0 0 2px 0; }
-  .subtitle { color: #6b7280; font-size: 13px; margin-bottom: 18px; }
-  .subtitle b { color: #374151; }
-  .kpi-row { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 20px; }
-  .kpi-card {
-    flex: 1; min-width: 220px; background: #fff; border: 1px solid #e5e7eb;
-    border-radius: 10px; padding: 14px 16px;
-  }
-  .kpi-card .name { font-weight: 600; font-size: 13px; margin-bottom: 6px; line-height: 1.3; }
-  .kpi-card .stats { display: flex; gap: 16px; margin: 8px 0 6px 0; }
-  .kpi-card .stat-value { font-size: 20px; font-weight: 700; }
-  .kpi-card .stat-label { font-size: 11px; color: #6b7280; }
-  .kpi-card a { font-size: 12px; color: #2563eb; text-decoration: none; }
-  .kpi-card a:hover { text-decoration: underline; }
-  .charts-row { display: flex; gap: 14px; margin-bottom: 20px; }
-  .chart-card { flex: 1; background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 14px 16px; min-width: 0; }
-  .chart-card h3 { font-size: 13px; margin: 0 0 10px 0; color: #374151; }
-  .chart-wrap { position: relative; height: 200px; }
-  .controls {
-    display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
-    background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px 14px; margin-bottom: 14px;
-  }
-  .controls label { font-size: 11px; color: #6b7280; display: block; margin-bottom: 3px; }
-  .controls select, .controls input[type=text] {
-    padding: 6px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; background: #fff;
-  }
-  .segmented { display: flex; border: 1px solid #d1d5db; border-radius: 6px; overflow: hidden; }
-  .segmented button {
-    border: none; background: #fff; padding: 7px 12px; font-size: 12px; cursor: pointer; color: #374151;
-  }
-  .segmented button + button { border-left: 1px solid #d1d5db; }
-  .segmented button.active { background: #2563eb; color: #fff; }
-  .count-pill { margin-left: auto; font-size: 12px; color: #374151; background: #f3f4f6; padding: 6px 10px; border-radius: 999px; }
-  .status-banner {
-    font-size: 12px; padding: 8px 12px; border-radius: 8px; margin-bottom: 12px; display: none;
-  }
-  .status-banner.info { display: block; background: #eff6ff; color: #1e40af; }
-  .status-banner.error { display: block; background: #fef2f2; color: #b91c1c; }
-  #gridContainer { background: #fff; border-radius: 10px; overflow: hidden; border: 1px solid #e5e7eb; }
-  .gridjs-th { font-size: 12px; }
-  .gridjs-td { font-size: 12.5px; }
-  .footnote { font-size: 11px; color: #9ca3af; margin-top: 14px; line-height: 1.5; }
+  .page { max-width: 1180px; margin: 0 auto; }
+  h1 { font-size: 17px; margin: 0 0 2px 0; font-weight: 700; letter-spacing: -.01em; }
+  h2.section { font-size: 12.5px; margin: 16px 0 3px 0; color: var(--text-dim); text-transform: uppercase; letter-spacing: .04em; font-weight: 700; }
+  .section-hint { font-size: 10.5px; color: var(--text-faint); margin-bottom: 6px; }
+  .subtitle { color: var(--text-faint); font-size: 11.5px; margin-bottom: 10px; }
+  .subtitle b { color: var(--text-dim); }
+  .banner { font-size: 11px; padding: 6px 10px; border-radius: 6px; margin-bottom: 10px; background: var(--blue-soft); color: #cad6e8; border: 1px solid #26385c; }
+  .banner.warn { background: #362c14; color: var(--amber); border-color: #4a3c1c; }
+  .info-icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 17px; height: 17px; border-radius: 50%; background: var(--blue-soft); color: #cad6e8; border: 1px solid #26385c; font-size: 10.5px; font-weight: 700; cursor: pointer; vertical-align: middle; margin-left: 7px; line-height: 1; padding: 0; }
+  .info-icon-btn:hover { background: #26385c; }
+  .kpi-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+  .kpi-card { flex: 1; min-width: 150px; background: var(--bg-1); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; }
+  .kpi-card .name { font-weight: 600; font-size: 10px; margin-bottom: 4px; color: var(--text-faint); text-transform: uppercase; letter-spacing: .03em; }
+  .kpi-card .stat-value { font-size: 17px; font-weight: 700; color: var(--text); }
+  .kpi-card .stat-sub { font-size: 10px; color: var(--text-faint); margin-top: 2px; }
+  .charts-row { display: flex; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+  .chart-card { flex: 1; min-width: 230px; background: var(--bg-1); border: 1px solid var(--border); border-radius: 8px; padding: 9px 11px; }
+  .chart-card h3 { font-size: 10px; margin: 0 0 1px 0; color: var(--text); font-weight: 600; }
+  .chart-card .hint { font-size: 8.5px; color: var(--text-faint); margin-bottom: 5px; }
+  .chart-wrap { position: relative; height: 170px; }
+  .chart-wrap.pie-wrap { height: 260px; }
+  .chart-empty { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-faint); font-size: 10.5px; }
+  #accountGrid, #leadGrid, #oppGrid { background: var(--bg-1); border-radius: 8px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 6px; }
+  .gridjs-th { font-size: 10.5px; }
+  .gridjs-td { font-size: 11px; }
+  .footnote { font-size: 10px; color: var(--text-faint); margin-top: 8px; line-height: 1.6; }
+  .footnote b { color: var(--text-dim); }
+  .tag { display: inline-block; font-size: 9.5px; padding: 1px 6px; border-radius: 999px; margin: 1px 2px 1px 0; }
+  .tag-engaged { background: var(--red-soft); color: #e8caca; font-weight: 600; }
+  .tag-netnew { background: var(--green-soft); color: #bcd9ce; font-weight: 600; }
 
-  .sf-section { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px 18px; margin-bottom: 20px; }
-  .sf-section h2 { font-size: 15px; margin: 0 0 2px 0; }
-  .sf-section .sf-note { font-size: 12px; color: #6b7280; margin-bottom: 14px; }
-  .sf-parent-card {
-    display: flex; align-items: center; justify-content: space-between; gap: 12px;
-    background: #f5f3ff; border: 1px solid #ddd6fe; border-radius: 8px; padding: 10px 14px; margin-bottom: 16px;
-  }
-  .sf-parent-card .sf-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; color: #7c3aed; font-weight: 600; }
-  .sf-parent-card a { font-size: 14px; font-weight: 600; color: #4c1d95; text-decoration: none; }
-  .sf-parent-card a:hover { text-decoration: underline; }
-  .sf-group { margin-bottom: 14px; }
-  .sf-group:last-child { margin-bottom: 0; }
-  .sf-group h3 { font-size: 12px; color: #6b7280; margin: 0 0 8px 0; text-transform: uppercase; letter-spacing: 0.03em; }
-  .sf-child-row { display: flex; gap: 12px; flex-wrap: wrap; }
-  .sf-child-card {
-    flex: 1; min-width: 240px; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px 12px; background: #fafafa;
-  }
-  .sf-child-card a { font-size: 13px; font-weight: 600; color: #2563eb; text-decoration: none; }
-  .sf-child-card a:hover { text-decoration: underline; }
-  .sf-child-card p { font-size: 11.5px; color: #6b7280; margin: 4px 0 0 0; line-height: 1.4; }
+  .funnel-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 0 3px 0; }
+  .funnel-row { height: 28px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 11px; font-weight: 600; border-radius: 4px; white-space: nowrap; }
+  .funnel-row .funnel-count { margin-left: 6px; font-weight: 700; }
+  .funnel-row .funnel-pct { margin-left: 5px; font-weight: 400; opacity: .85; font-size: 9.5px; }
+
+  .methodology-wrap { position: relative; display: inline-block; }
+  .methodology-tooltip { display: none; position: absolute; bottom: calc(100% + 6px); left: 0; z-index: 30; background: #05060a; color: #d7dadf; padding: 10px 12px; border-radius: 6px; font-size: 10px; line-height: 1.6; white-space: normal; width: 540px; max-width: 80vw; box-shadow: 0 4px 14px rgba(0,0,0,.5); border: 1px solid var(--border); }
+  .methodology-tooltip b { color: var(--text-dim); font-weight: 600; }
+  .methodology-wrap:hover .methodology-tooltip { display: block; }
+
+  details.table-drop { background: var(--bg-1); border: 1px solid var(--border); border-radius: 8px; margin: 8px 0; padding: 0 12px; }
+  details.table-drop[open] { padding-bottom: 10px; }
+  details.table-drop summary { cursor: pointer; list-style: none; padding: 9px 0; font-size: 11.5px; font-weight: 700; color: var(--text); display: flex; align-items: center; justify-content: space-between; }
+  details.table-drop summary::-webkit-details-marker { display: none; }
+  details.table-drop summary::after { content: "▾"; color: var(--text-faint); font-size: 10px; transition: transform .15s; margin-left: 8px; }
+  details.table-drop[open] summary::after { transform: rotate(180deg); }
+  details.table-drop summary .drop-count { font-weight: 400; color: var(--text-faint); text-transform: none; letter-spacing: 0; margin-left: 6px; font-size: 10.5px; }
+
+  .gridjs-wrapper { background: var(--bg-1) !important; border: none !important; box-shadow: none !important; }
+  .gridjs-table { background: var(--bg-1) !important; color: var(--text) !important; }
+  th.gridjs-th { background: var(--bg-2) !important; color: var(--text-faint) !important; border-color: var(--border) !important; }
+  td.gridjs-td { background: var(--bg-1) !important; color: var(--text) !important; border-color: var(--border-soft) !important; }
+  .gridjs-tr:hover td.gridjs-td { background: var(--bg-2) !important; }
+  .gridjs-footer { background: var(--bg-1) !important; border-color: var(--border) !important; }
+  .gridjs-pagination { color: var(--text-dim) !important; }
+  .gridjs-pagination button { background: var(--bg-2) !important; color: var(--text-dim) !important; border-color: var(--border) !important; }
+  .gridjs-pagination button:hover:not([disabled]) { background: var(--bg-3) !important; }
+  .gridjs-pagination button:disabled { opacity: .4; }
+  .gridjs-search-input { background: var(--bg-2) !important; color: var(--text) !important; border-color: var(--border) !important; }
+  .gridjs-input::placeholder { color: var(--text-faint); }
+  .gridjs-summary { color: var(--text-faint) !important; }
 </style>
 </head>
 <body>
+<div class="page">
 
-  <h1>RAISE Event — Campaign Attribution Dashboard</h1>
-  <div class="subtitle">
-    HubSpot portal 242363872 &middot; campaigns are named <b>Raise26Paris</b> in HubSpot &middot;
-    <span id="loadedAt"></span>
-  </div>
+<h1>AI Infra Summit 2026 — ABX Engagement Dashboard <button class="info-icon-btn" onclick="toggleInfoPopover('mainInfoBanner')" title="What is this dashboard?">?</button></h1>
+<div class="subtitle">Source: live Salesforce sync (<b>clockwork-sfdc-sync-aiinfra26</b>) &middot; campaign <a href="https://clockworksystems.lightning.force.com/lightning/r/Campaign/701TV00000tqRm2YAE/view" target="_blank" rel="noopener" style="color:var(--blue)">701TV00000tqRm2YAE</a> &middot; auto-refreshes every 6 hours &middot; <span id="loadedAt"></span></div>
 
-  <div id="statusBanner" class="status-banner"></div>
+<div class="banner" id="mainInfoBanner" style="display:none;">Live data pulled directly from Salesforce via a scheduled GitHub Action (clockwork-sfdc-sync-aiinfra26). Tracks two levels: (1) COMPANY-level engagement (did anyone at this account already know us before AI Infra Summit?) and (2) PERSON-level funnel stage (where is the specific contact in the pipeline?).</div>
 
-  <div class="kpi-row" id="kpiRow"></div>
+<div id="dataBanner"></div>
 
-  <div class="charts-row">
-    <div class="chart-card">
-      <h3>Lifecycle stage distribution</h3>
-      <div class="chart-wrap"><canvas id="lifecycleChart"></canvas></div>
+<div id="mainContent"></div>
+
+<div class="footnote">
+  <span class="methodology-wrap">
+    <b>Methodology</b> <span class="info-icon-btn" title="Hover for methodology details">?</span>
+    <div class="methodology-tooltip">
+      &bull; <b>Company Already Engaged</b> = Salesforce shows an existing Opportunity (any owner/team), an existing Contact, or another open Lead tied to that company's domain, from OUTSIDE this campaign's leads — i.e., someone at that company was already talking to us before/regardless of who we met via this campaign.<br/>
+      &bull; <b>Qualified</b> = real Salesforce Lead Status of "In Progress (MQL)" or "In Progress (SAL)" — not an estimate.<br/>
+      &bull; <b>Net New</b> Opportunity requires Lead Source exactly "AI Infra Summit 2026 Santa Clara" AND Created Date on/after 2026-09-15; everything else domain-matched is classified "Existing" pipeline.<br/>
+      &bull; <b>Pipeline default value is $200,000</b> per account with no real open Opportunity.<br/>
+      &bull; "GTM persona" is a heuristic classification from job-title keywords, not a Salesforce field — treat as a starting point, not ground truth.<br/>
+      &bull; "Company segment mix" (Hyperscaler / Neocloud / Enterprise / Startup / Other) from the RAISE template is intentionally omitted here — that was a manual judgment call per account, not synced data, and there are no accounts yet to classify.<br/>
+      &bull; Data refreshes automatically every 6 hours via the clockwork-sfdc-sync-aiinfra26 GitHub Action; re-open this page to see the latest snapshot as of load time.
     </div>
-    <div class="chart-card">
-      <h3>GTM persona distribution</h3>
-      <div class="chart-wrap"><canvas id="personaChart"></canvas></div>
-    </div>
-  </div>
+  </span>
+</div>
 
-  <div class="controls">
-    <div>
-      <label>Attribution type</label>
-      <div class="segmented" id="typeSegment">
-        <button data-type="INFLUENCED_CONTACTS" class="active">Influenced</button>
-        <button data-type="NEW_CONTACTS_FIRST_TOUCH">First touch</button>
-        <button data-type="NEW_CONTACTS_LAST_TOUCH">Last touch</button>
-      </div>
-    </div>
-    <div>
-      <label>Campaign</label>
-      <select id="filterCampaign"><option value="">All campaigns</option></select>
-    </div>
-    <div>
-      <label>Lifecycle stage</label>
-      <select id="filterLifecycle"><option value="">All stages</option></select>
-    </div>
-    <div>
-      <label>Clockwork persona</label>
-      <select id="filterClockwork"><option value="">All personas</option></select>
-    </div>
-    <div>
-      <label>GTM persona</label>
-      <select id="filterGtm"><option value="">All personas</option></select>
-    </div>
-    <div class="count-pill" id="countPill">Loading…</div>
-  </div>
-
-  <div id="gridContainer"></div>
-
-  <div class="sf-section">
-    <h2>Salesforce Campaigns — RAISE Summit 2025</h2>
-    <div class="sf-note">Reference only — no Salesforce connector is available yet, so these are links and descriptions, not live member/contact data.</div>
-
-    <div class="sf-parent-card">
-      <div>
-        <div class="sf-label">Parent Campaign</div>
-        <a href="https://clockworksystems.lightning.force.com/lightning/r/Campaign/701TV00000Q6GCvYAN/view" target="_blank" rel="noopener">RAISE Summit 2025</a>
-      </div>
-    </div>
-
-    <div class="sf-group">
-      <h3>Post Event Campaigns</h3>
-      <div class="sf-child-row">
-        <div class="sf-child-card">
-          <a href="https://clockworksystems.lightning.force.com/lightning/r/Campaign/701TV00000SLsriYAD/view" target="_blank" rel="noopener">Booth Visitors | Post-Conf | RAISE 2025</a>
-          <p>Who visited the Clockwork booth at RAISE Summit 2025.</p>
-        </div>
-        <div class="sf-child-card">
-          <a href="https://clockworksystems.lightning.force.com/lightning/r/Campaign/701TV00000SLtiwYAD/view" target="_blank" rel="noopener">Virtual Booth Visitors | Post-Conf | RAISE 2025</a>
-          <p>Prospects who engaged with Clockwork's virtual booth presence at RAISE Summit 2025.</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="sf-group">
-      <h3>Pre Event Lists (Targeted Email Campaigns)</h3>
-      <div class="sf-child-row">
-        <div class="sf-child-card">
-          <a href="https://clockworksystems.lightning.force.com/lightning/r/Campaign/701TV00000SLIMpYAP/view" target="_blank" rel="noopener">On-Site Meetings | Post-Conf | RAISE 2025</a>
-          <p>Confirmed in-person meetings at RAISE Summit 2025 in Paris.</p>
-        </div>
-        <div class="sf-child-card">
-          <a href="https://clockworksystems.lightning.force.com/lightning/r/Campaign/701TV00000Q6LVxYAN/view" target="_blank" rel="noopener">Attendees | Pre-Conf | RAISE 2025</a>
-          <p>General prospects at companies known to be attending — emphasis on discovering fit, driving awareness, and initiating conversations.</p>
-        </div>
-        <div class="sf-child-card">
-          <a href="https://clockworksystems.lightning.force.com/lightning/r/Campaign/701TV00000Q6QIdYAN/view" target="_blank" rel="noopener">Speakers | Pre-Conf | RAISE 2025</a>
-          <p>Outreach to confirmed and potential speakers — focused on strategic relationship-building and thought leadership alignment.</p>
-        </div>
-        <div class="sf-child-card">
-          <a href="https://clockworksystems.lightning.force.com/lightning/r/Campaign/701TV00000Q6EhMYAV/view" target="_blank" rel="noopener">Sponsors | Pre-Conf | RAISE 2025</a>
-          <p>Sponsors and exhibitors who may benefit from Clockwork's infrastructure capabilities.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="footnote">
-    "Attribution Source (First Touch)" = HubSpot's Original Traffic Source (hs_analytics_source). "Most Recent Touch" = Latest Traffic Source (hs_latest_source), both properties on the contact record (account-wide, not campaign-specific).
-    "Account Name" uses the contact's Company Name field — HubSpot's cross-object join to the associated Company record isn't reliable in bulk for this dataset size, so this is the fastest accurate bulk source available.
-    "Influenced" = any engagement with campaign assets; "First/Last touch" = contacts whose first/last marketing interaction was this campaign. Reload this view for fresh data.
-  </div>
+</div>
 
 <script>
-const HS = {
-  contacts: 'mcp__bdf3b9ba-b836-461c-9277-d5b43b9490c0__get_campaign_contacts_by_type',
-  analytics: 'mcp__bdf3b9ba-b836-461c-9277-d5b43b9490c0__get_campaign_analytics',
-  crmObjects: 'mcp__bdf3b9ba-b836-461c-9277-d5b43b9490c0__get_crm_objects',
-  properties: 'mcp__bdf3b9ba-b836-461c-9277-d5b43b9490c0__get_properties',
-};
+const REPO_OWNER = 'sanjeevchris77';
+const REPO_NAME = 'clockwork-sfdc-sync-aiinfra26';
+const REPO_BRANCH = 'main';
+const RAW_BASE = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${REPO_BRANCH}/`;
 
-const CAMPAIGNS = [
-  { id: 780607459041, short: 'VIP Dinner', name: '[Raise26Paris] VIP Dinner | 07-2026', start: '2026-07-08',
-    url: 'https://app-na2.hubspot.com/marketing/242363872/campaigns/623ef6ad-38d3-443f-8a37-5eb05b572780/performance' },
-  { id: 780608178907, short: 'Booth Scans', name: '[Raise26Paris] Booth Scans | 07-08-2026', start: '2026-07-08',
-    url: 'https://app-na2.hubspot.com/marketing/242363872/campaigns/28d0d75c-8778-4bb4-8fd2-16ad36ab94f7/performance' },
-  { id: 780607459024, short: 'Pre-event Outreach', name: '[Raise26Paris] Pre-event Outreach', start: '2026-05-31',
-    url: 'https://app-na2.hubspot.com/marketing/242363872/campaigns/8bcc99a8-c8ef-4f93-9ded-f4d382929eb4/performance' },
+const charts = {};
+
+function toggleInfoPopover(id) {
+  const el = document.getElementById(id);
+  el.style.display = (el.style.display === 'none' || !el.style.display) ? 'block' : 'none';
+}
+
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function fmtMoney(n) {
+  n = Number(n) || 0;
+  return '$' + n.toLocaleString('en-US');
+}
+
+async function fetchJson(path) {
+  const res = await fetch(RAW_BASE + path, { cache: 'no-store' });
+  if (!res.ok) throw new Error(path + ': HTTP ' + res.status);
+  return res.json();
+}
+
+// Heuristic GTM persona classifier from job title keywords -- not a
+// Salesforce field, a starting point only (see Methodology).
+const PERSONA_RULES = [
+  [/\b(ceo|cto|cfo|coo|founder|chief|president|vp|vice president|svp|evp)\b/i, 'Executive'],
+  [/\b(engineer|engineering|developer|swe|architect|infra|infrastructure|sre|devops|platform)\b/i, 'Engineering / Infra'],
+  [/\b(data scien|machine learning|\bml\b|\bai\b|research)\b/i, 'Data / AI / ML'],
+  [/\b(product|pm\b|program manager)\b/i, 'Product'],
+  [/\b(sales|account exec|\bae\b|business development|\bbd\b|partnership)\b/i, 'Sales / BD'],
+  [/\b(marketing|growth|demand gen|brand)\b/i, 'Marketing'],
+  [/\b(procurement|finance|legal|operations|ops\b)\b/i, 'Ops / Finance'],
 ];
-
-const CONTACT_PROPS = ['firstname','lastname','jobtitle','email','lifecyclestage','hs_analytics_source','hs_latest_source','clockwork_persona_contact','gtm_persona_contact','company'];
-
-let propsCache = {};        // contactId -> properties
-let enumMaps = {};          // propertyName -> {value: label}
-let allRows = [];           // current full row set for selected attribution type
-let grid = null;
-let lifecycleChart = null;
-let personaChart = null;
-let currentType = 'INFLUENCED_CONTACTS';
-
-function setStatus(msg, kind) {
-  const el = document.getElementById('statusBanner');
-  if (!msg) { el.className = 'status-banner'; el.textContent = ''; return; }
-  el.className = 'status-banner ' + (kind || 'info');
-  el.textContent = msg;
-}
-
-async function callTool(name, args) {
-  const res = await window.cowork.callMcpTool(name, args);
-  if (res.isError) {
-    const msg = (res.content && res.content[0] && res.content[0].text) || 'Unknown tool error';
-    throw new Error(name + ': ' + msg);
+function classifyPersona(title) {
+  if (!title) return 'Unknown';
+  for (const [re, label] of PERSONA_RULES) {
+    if (re.test(title)) return label;
   }
-  if (res.structuredContent) return res.structuredContent;
-  try { return JSON.parse(res.content[0].text); } catch (e) { return res.content && res.content[0] && res.content[0].text; }
+  return 'Other';
 }
 
-async function fetchAllContactIds(campaignId, contactType) {
-  let offset = 0;
-  const limit = 500;
-  let ids = [];
-  while (true) {
-    const data = await callTool(HS.contacts, { campaignCrmObjectId: campaignId, contactType, limit, offset });
-    ids = ids.concat((data.results || []).map(r => String(r.id)));
-    if (!data.hasMore) break;
-    offset = typeof data.offset === 'number' ? data.offset : offset + limit;
-  }
-  return ids;
+function countBy(rows, fn) {
+  const m = {};
+  rows.forEach(r => { const v = fn(r) || 'Unknown'; m[v] = (m[v] || 0) + 1; });
+  return m;
 }
 
-async function fetchMissingProps(ids) {
-  const missing = ids.filter(id => !propsCache[id]);
-  const CHUNK = 100;
-  const chunks = [];
-  for (let i = 0; i < missing.length; i += CHUNK) chunks.push(missing.slice(i, i + CHUNK));
-  let done = 0;
-  for (const chunk of chunks) {
-    const data = await callTool(HS.crmObjects, { objectType: 'CONTACT', objectIds: chunk.map(Number), properties: CONTACT_PROPS });
-    (data.objects || []).forEach(o => { propsCache[String(o.id)] = Object.assign({}, o.properties, { _url: o.url }); });
-    done += chunk.length;
-    setStatus('Loading contact details… ' + done + ' / ' + missing.length, 'info');
-  }
+const PALETTE = ['#abbed9','#d1cae7','#83b7a4','#ccb886','#e1bbbb','#7dd3fc','#f0abfc','#86efac','#fcd34d','#fca5a5'];
+
+const FUNNEL_ROW_COLORS = {
+  'Leads': '#3b4252',
+  'Marketing Engaged Lead': '#3a4a63',
+  'Marketing Qualified Lead': '#2c5c7a',
+  'Sales Accepted Lead': '#1f6f5c',
+  'Sales Qualified Lead': '#1a7a4f',
+};
+function funnelColorFor(stage) {
+  return FUNNEL_ROW_COLORS[stage] || '#3b4252';
 }
 
-async function loadEnumMaps() {
-  const data = await callTool(HS.properties, { objectType: 'contacts', propertyNames: ['lifecyclestage', 'hs_analytics_source', 'hs_latest_source'] });
-  (data.results || []).forEach(p => {
-    const map = {};
-    (p.options || []).forEach(o => { map[o.value] = o.label; });
-    enumMaps[p.name] = map;
+function renderFunnel(elId, stageCounts) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  const keys = Object.keys(stageCounts);
+  if (!keys.length) { el.innerHTML = '<div class="chart-empty">No leads yet.</div>'; return; }
+  const hasLeads = Object.prototype.hasOwnProperty.call(stageCounts, 'Leads');
+  const total = hasLeads ? stageCounts['Leads'] : Object.values(stageCounts).reduce((a,b) => a+b, 0);
+  const order = keys.slice().sort((a,b) => stageCounts[b] - stageCounts[a]);
+  const maxCount = Math.max(...order.map(k => stageCounts[k]));
+  el.innerHTML = '';
+  order.forEach(stage => {
+    const count = stageCounts[stage];
+    const pct = total ? Math.round((count / total) * 100) : 0;
+    const widthPct = maxCount ? Math.round(32 + (count / maxCount) * 60) : 32;
+    const row = document.createElement('div');
+    row.className = 'funnel-row';
+    row.style.width = widthPct + '%';
+    row.style.background = funnelColorFor(stage);
+    row.innerHTML = esc(stage) + ' <span class="funnel-count">' + count + '</span><span class="funnel-pct">(' + pct + '% of ' + total + ')</span>';
+    el.appendChild(row);
   });
 }
 
-function mapEnum(prop, val) {
-  if (!val) return null;
-  return (enumMaps[prop] && enumMaps[prop][val]) || val;
-}
-
-async function loadAnalytics() {
-  const requests = CAMPAIGNS.map(c => ({ campaignCrmObjectId: c.id, requestedData: 'METRICS' }));
-  const data = await callTool(HS.analytics, { requests });
-  const byId = {};
-  (data.responses || []).forEach(r => { byId[r.campaignCrmObjectId] = r.metrics; });
-  const row = document.getElementById('kpiRow');
-  row.innerHTML = '';
-  CAMPAIGNS.forEach(c => {
-    const m = byId[c.id] || {};
-    const card = document.createElement('div');
-    card.className = 'kpi-card';
-    card.innerHTML =
-      '<div class="name">' + c.name + '</div>' +
-      '<div class="stats">' +
-        '<div><div class="stat-value">' + (m.sessions ?? 0) + '</div><div class="stat-label">Sessions</div></div>' +
-        '<div><div class="stat-value">' + (m.influencedContacts ?? 0) + '</div><div class="stat-label">Influenced</div></div>' +
-        '<div><div class="stat-value">' + (m.newContactsFirstTouch ?? 0) + '</div><div class="stat-label">New (first touch)</div></div>' +
-      '</div>' +
-      '<a href="' + c.url + '" target="_blank" rel="noopener">Open in HubSpot ↗</a>';
-    row.appendChild(card);
-  });
-}
-
-function clean(v) {
-  if (!v) return null;
-  if (typeof v === 'string' && (v.toLowerCase() === 'undefined' || v.toLowerCase() === 'null' || v.trim() === '')) return null;
-  return v;
-}
-
-function buildRows(idToCampaigns) {
-  return Object.keys(idToCampaigns).map(id => {
-    const p = propsCache[id] || {};
-    const campNames = Array.from(idToCampaigns[id]).map(cid => {
-      const c = CAMPAIGNS.find(x => x.id === cid);
-      return c ? c.short : String(cid);
-    }).sort().join(', ');
-    return {
-      id,
-      account: clean(p.company) || '—',
-      firstname: clean(p.firstname) || '—',
-      lastname: clean(p.lastname) || '—',
-      title: clean(p.jobtitle) || '—',
-      email: clean(p.email) || '—',
-      lifecycle: mapEnum('lifecyclestage', p.lifecyclestage) || '—',
-      firstTouchSource: mapEnum('hs_analytics_source', p.hs_analytics_source) || '—',
-      lastTouchSource: mapEnum('hs_latest_source', p.hs_latest_source) || '—',
-      clockworkPersona: p.clockwork_persona_contact || '—',
-      gtmPersona: p.gtm_persona_contact || '—',
-      campaigns: campNames || '—',
-      url: p._url || '',
-    };
-  });
-}
-
-function uniqueSorted(rows, field) {
-  return Array.from(new Set(rows.map(r => r[field]).filter(v => v && v !== '—'))).sort();
-}
-
-function populateFilterOptions() {
-  const fillSelect = (selId, values) => {
-    const sel = document.getElementById(selId);
-    const current = sel.value;
-    const keep = sel.querySelector('option[value=""]').outerHTML;
-    sel.innerHTML = keep;
-    values.forEach(v => {
-      const opt = document.createElement('option');
-      opt.value = v; opt.textContent = v;
-      sel.appendChild(opt);
-    });
-    if (values.includes(current)) sel.value = current;
-  };
-  fillSelect('filterCampaign', CAMPAIGNS.map(c => c.short));
-  fillSelect('filterLifecycle', uniqueSorted(allRows, 'lifecycle'));
-  fillSelect('filterClockwork', uniqueSorted(allRows, 'clockworkPersona'));
-  fillSelect('filterGtm', uniqueSorted(allRows, 'gtmPersona'));
-}
-
-function applyFilters() {
-  const campaign = document.getElementById('filterCampaign').value;
-  const lifecycle = document.getElementById('filterLifecycle').value;
-  const clockwork = document.getElementById('filterClockwork').value;
-  const gtm = document.getElementById('filterGtm').value;
-  const filtered = allRows.filter(r =>
-    (!campaign || r.campaigns.split(', ').includes(campaign)) &&
-    (!lifecycle || r.lifecycle === lifecycle) &&
-    (!clockwork || r.clockworkPersona === clockwork) &&
-    (!gtm || r.gtmPersona === gtm)
-  );
-  document.getElementById('countPill').textContent = filtered.length + ' of ' + allRows.length + ' contacts';
-  renderGrid(filtered);
-  renderCharts(filtered);
-}
-
-function renderGrid(rows) {
-  const data = rows.map(r => [r.account, r.firstname, r.lastname, r.title, r.email, r.lifecycle, r.firstTouchSource, r.lastTouchSource, r.clockworkPersona, r.gtmPersona, r.campaigns]);
-  const columns = ['Account Name', 'First Name', 'Last Name', 'Title', 'Email', 'Lifecycle Stage', 'Attribution Source (First Touch)', 'Most Recent Touch', 'Clockwork Persona', 'GTM Persona', 'Campaign(s) Touched'];
-  if (grid) {
-    grid.updateConfig({ data }).forceRender();
-  } else {
-    grid = new gridjs.Grid({
-      columns,
-      data,
-      search: true,
-      sort: true,
-      resizable: true,
-      pagination: { limit: 25 },
-      style: { table: { 'font-size': '12.5px' } },
-    }).render(document.getElementById('gridContainer'));
+function renderPieChart(canvasId, counts) {
+  const ctx = document.getElementById(canvasId);
+  if (!ctx) return;
+  const labels = Object.keys(counts).sort((a,b) => counts[b]-counts[a]);
+  if (charts[canvasId]) charts[canvasId].destroy();
+  if (!labels.length) {
+    ctx.getContext('2d').clearRect(0,0,ctx.width,ctx.height);
+    ctx.parentElement.insertAdjacentHTML('beforeend', '<div class="chart-empty" data-for="' + canvasId + '">No data yet.</div>');
+    return;
   }
-}
-
-function renderCharts(rows) {
-  const countBy = (field) => {
-    const m = {};
-    rows.forEach(r => { const v = r[field] || '—'; m[v] = (m[v] || 0) + 1; });
-    return m;
-  };
-  const palette = ['#2563eb','#7c3aed','#0891b2','#059669','#d97706','#dc2626','#4f46e5','#db2777','#65a30d','#0d9488','#9333ea','#ea580c'];
-
-  const lc = countBy('lifecycle');
-  const lcLabels = Object.keys(lc).sort((a,b)=>lc[b]-lc[a]);
-  const lcCtx = document.getElementById('lifecycleChart');
-  if (lifecycleChart) lifecycleChart.destroy();
-  lifecycleChart = new Chart(lcCtx, {
-    type: 'bar',
-    data: { labels: lcLabels, datasets: [{ label: 'Contacts', data: lcLabels.map(l => lc[l]), backgroundColor: palette[0] }] },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
-  });
-
-  const gp = countBy('gtmPersona');
-  const gpLabels = Object.keys(gp).sort((a,b)=>gp[b]-gp[a]);
-  const gpCtx = document.getElementById('personaChart');
-  if (personaChart) personaChart.destroy();
-  personaChart = new Chart(gpCtx, {
+  charts[canvasId] = new Chart(ctx, {
     type: 'doughnut',
-    data: { labels: gpLabels, datasets: [{ data: gpLabels.map(l => gp[l]), backgroundColor: gpLabels.map((_,i)=>palette[i % palette.length]) }] },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: { size: 10 } } } } }
+    data: { labels, datasets: [{ data: labels.map(l => counts[l]), backgroundColor: labels.map((_,i)=>PALETTE[i % PALETTE.length]) }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: '#9aa2af', boxWidth: 10, font: { size: 9.5 } } } } }
   });
 }
 
-async function loadForType(contactType) {
-  currentType = contactType;
-  setStatus('Loading ' + contactType.replace(/_/g,' ').toLowerCase() + ' contacts…', 'info');
-  document.getElementById('countPill').textContent = 'Loading…';
+function renderBarChart(canvasId, counts, label) {
+  const ctx = document.getElementById(canvasId);
+  if (!ctx) return;
+  const labels = Object.keys(counts).sort((a,b) => counts[b]-counts[a]);
+  if (charts[canvasId]) charts[canvasId].destroy();
+  if (!labels.length) {
+    ctx.parentElement.insertAdjacentHTML('beforeend', '<div class="chart-empty" data-for="' + canvasId + '">No data yet.</div>');
+    return;
+  }
+  charts[canvasId] = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets: [{ label, data: labels.map(l => counts[l]), backgroundColor: '#abbed9' }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, ticks: { color: '#9aa2af', precision: 0 }, grid: { color: '#23262d' } }, x: { ticks: { color: '#9aa2af' }, grid: { display: false } } } }
+  });
+}
+
+function renderKpis(meta, accounts) {
+  const netNewOpps = 0; // populated once real opportunities exist (see origin field)
+  const kpis = [
+    ['Distinct Companies', meta.distinct_companies ?? 0, 'unique accounts on this campaign'],
+    ['Net-New Companies', meta.companies_net_new ?? 0, 'no prior Opportunity, Contact, or open Lead'],
+    ['Already-Engaged Accounts', meta.companies_already_engaged ?? 0, 'someone at the company already talking to us'],
+    ['Total Leads', meta.lead_count ?? 0, 'across all tracked reps'],
+    ['Rep-owned Opportunities', meta.opp_count ?? 0, 'owned by the 4 tracked reps'],
+    ['Potential Pipeline', fmtMoney(meta.potential_pipeline_total), '$200K default per account without a real open Opportunity'],
+  ];
+  document.getElementById('mainContent').insertAdjacentHTML('beforeend',
+    '<div class="kpi-row">' + kpis.map(([name, val, sub]) =>
+      '<div class="kpi-card"><div class="name">' + esc(name) + '</div><div class="stat-value">' + esc(val) + '</div><div class="stat-sub">' + esc(sub) + '</div></div>'
+    ).join('') + '</div>'
+  );
+}
+
+function renderCharts(leads, opps, accounts, byRep) {
+  const html = `
+    <div class="charts-row">
+      <div class="chart-card" style="flex: 1 1 100%;">
+        <h3>Lead lifecycle funnel</h3>
+        <div class="hint">Leads &rarr; MEL &rarr; MQL &rarr; SAL, based on real Salesforce Lead Status (or a best-effort keyword classification when Status isn't set); bar width = share of the largest stage.</div>
+        <div class="funnel-wrap" id="personaFunnel"></div>
+      </div>
+    </div>
+    <div class="charts-row">
+      <div class="chart-card"><h3>Company engagement</h3><div class="hint">Already-engaged vs. net-new companies</div><div class="chart-wrap pie-wrap"><canvas id="engageChart"></canvas></div></div>
+      <div class="chart-card"><h3>GTM persona breakdown</h3><div class="hint">Classified from job title (heuristic)</div><div class="chart-wrap pie-wrap"><canvas id="personaMixChart"></canvas></div></div>
+      <div class="chart-card"><h3>Net New vs. Existing Opportunities</h3><div class="hint">Net New = exact Lead Source + Created Date on/after 2026-09-15</div><div class="chart-wrap pie-wrap"><canvas id="oppOriginChart"></canvas></div></div>
+    </div>
+    <div class="charts-row">
+      <div class="chart-card"><h3>Leads by rep</h3><div class="chart-wrap"><canvas id="repChart"></canvas></div></div>
+      <div class="chart-card"><h3>Lead lifecycle stage (bar)</h3><div class="chart-wrap"><canvas id="lifecycleChart"></canvas></div></div>
+      <div class="chart-card"><h3>Account tier mix</h3><div class="hint">Salesforce Account ABM_Tier__c field</div><div class="chart-wrap pie-wrap"><canvas id="tierChart"></canvas></div></div>
+    </div>
+
+    <details class="table-drop" open id="accountTableDrop">
+      <summary>Company-level rollup (breadth) <span class="drop-count">— ${accounts.length} account${accounts.length===1?'':'s'}</span></summary>
+      <div id="accountGrid"></div>
+    </details>
+
+    <details class="table-drop" open>
+      <summary>Person-level detail (depth) <span class="drop-count">— ${leads.length} contact${leads.length===1?'':'s'}</span></summary>
+      <div id="leadGrid"></div>
+    </details>
+
+    <details class="table-drop" id="oppTableDrop">
+      <summary>Opportunities <span class="drop-count">— ${opps.length} rep-owned opportunit${opps.length===1?'y':'ies'}</span></summary>
+      <div id="oppGrid"></div>
+    </details>
+  `;
+  document.getElementById('mainContent').insertAdjacentHTML('beforeend', html);
+
+  renderFunnel('personaFunnel', countBy(leads, l => l.lifecycle_stage));
+  renderPieChart('engageChart', countBy(accounts, a => a.company_already_engaged === 'Yes' ? 'Already Engaged' : 'Net New'));
+  renderPieChart('personaMixChart', countBy(leads, l => classifyPersona(l.title)));
+  renderPieChart('oppOriginChart', countBy(opps, o => o.origin));
+  renderBarChart('repChart', Object.fromEntries(Object.entries(byRep).map(([rep, d]) => [rep, (d.leads || []).length])), 'Leads');
+  renderBarChart('lifecycleChart', countBy(leads, l => l.lifecycle_stage), 'Leads');
+  renderPieChart('tierChart', countBy(accounts, a => a.abm_tier || 'No tier set'));
+
+  if (leads.length) {
+    new gridjs.Grid({
+      columns: ['Company', 'First Name', 'Last Name', 'Title', 'Email', 'Owner', 'Lifecycle Stage', 'Already Engaged', 'Lead Source'],
+      data: leads.map(l => [l.company, l.first_name, l.last_name, l.title, l.email, l.owner, l.lifecycle_stage, l.company_already_engaged, l.lead_source]),
+      search: true, sort: true, resizable: true, pagination: { limit: 25 },
+      style: { table: { 'font-size': '11px' } },
+    }).render(document.getElementById('leadGrid'));
+  } else {
+    document.getElementById('leadGrid').innerHTML = '<div class="chart-empty" style="height:60px;">No leads yet.</div>';
+  }
+
+  if (opps.length) {
+    new gridjs.Grid({
+      columns: ['Account', 'Owner', 'Amount', 'Stage', 'Origin', 'Created Date', 'Campaign'],
+      data: opps.map(o => [o.account, o.owner, fmtMoney(o.amount), o.stage, o.origin, o.created_date, o.campaign]),
+      search: true, sort: true, resizable: true, pagination: { limit: 25 },
+      style: { table: { 'font-size': '11px' } },
+    }).render(document.getElementById('oppGrid'));
+  } else {
+    document.getElementById('oppGrid').innerHTML = '<div class="chart-empty" style="height:60px;">No opportunities yet.</div>';
+  }
+
+  if (accounts.length) {
+    new gridjs.Grid({
+      columns: ['Company', 'Booth/Campaign Leads', 'Already Engaged', 'Has Open Opportunity', 'Potential Pipeline', 'ABM Tier'],
+      data: accounts.map(a => [a.company, a.booth_scan_lead_count, a.company_already_engaged, a.has_open_opportunity ? 'Yes' : 'No', fmtMoney(a.potential_pipeline_amount), a.abm_tier || '—']),
+      search: true, sort: true, resizable: true, pagination: { limit: 25 },
+      style: { table: { 'font-size': '11px' } },
+    }).render(document.getElementById('accountGrid'));
+  } else {
+    document.getElementById('accountGrid').innerHTML = '<div class="chart-empty" style="height:60px;">No accounts yet.</div>';
+  }
+}
+
+(async function init() {
   try {
-    const idToCampaigns = {};
-    for (const c of CAMPAIGNS) {
-      const ids = await fetchAllContactIds(c.id, contactType);
-      ids.forEach(id => {
-        if (!idToCampaigns[id]) idToCampaigns[id] = new Set();
-        idToCampaigns[id].add(c.id);
-      });
+    const [meta, leads, opps, accounts, byRep] = await Promise.all([
+      fetchJson('data/meta.json'),
+      fetchJson('data/leads.json'),
+      fetchJson('data/opportunities.json'),
+      fetchJson('data/account_summary.json'),
+      fetchJson('data/by_rep.json'),
+    ]);
+
+    if (!leads.length) {
+      document.getElementById('dataBanner').innerHTML =
+        '<div class="banner warn">No leads or opportunities have synced yet for campaign 701TV00000tqRm2YAE — this dashboard is wired and ready, and will populate automatically once the sync (every 6h) starts returning real records.</div>';
     }
-    const allIds = Object.keys(idToCampaigns);
-    await fetchMissingProps(allIds);
-    allRows = buildRows(idToCampaigns);
-    populateFilterOptions();
-    applyFilters();
-    setStatus('', null);
+
+    renderKpis(meta || {}, accounts || []);
+    renderCharts(leads || [], opps || [], accounts || [], byRep || {});
     document.getElementById('loadedAt').textContent = 'loaded ' + new Date().toLocaleString();
   } catch (err) {
     console.error(err);
-    setStatus('Error loading data: ' + err.message, 'error');
-    document.getElementById('countPill').textContent = 'Error';
-  }
-}
-
-document.getElementById('typeSegment').addEventListener('click', (e) => {
-  const btn = e.target.closest('button');
-  if (!btn) return;
-  document.querySelectorAll('#typeSegment button').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  loadForType(btn.dataset.type);
-});
-
-['filterCampaign','filterLifecycle','filterClockwork','filterGtm'].forEach(id => {
-  document.getElementById(id).addEventListener('change', applyFilters);
-});
-
-(async function init() {
-  setStatus('Loading campaigns…', 'info');
-  try {
-    await Promise.all([loadAnalytics(), loadEnumMaps()]);
-    await loadForType(currentType);
-  } catch (err) {
-    console.error(err);
-    setStatus('Error initializing dashboard: ' + err.message, 'error');
+    document.getElementById('dataBanner').innerHTML =
+      '<div class="banner warn">Error loading data from ' + esc(REPO_NAME) + ': ' + esc(err.message) + '. If this repo is private, raw.githubusercontent.com fetches will fail from a public Netlify site — it needs to be public for this page to work.</div>';
   }
 })();
 </script>
