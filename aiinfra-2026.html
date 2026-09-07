@@ -59,7 +59,7 @@
   .chart-wrap { position: relative; height: 170px; }
   .chart-wrap.pie-wrap { height: 260px; }
   .chart-empty { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-faint); font-size: 10.5px; }
-  #accountGrid, #leadGrid, #oppGrid, #preAccountGrid, #preOppGrid, #preUnmatchedGrid { background: var(--bg-1); border-radius: 8px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 6px; }
+  #accountGrid, #leadGrid, #oppGrid, #preAccountGrid, #preOppGrid, #preUnmatchedGrid, #hubspotMqaGrid { background: var(--bg-1); border-radius: 8px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 6px; }
   .gridjs-th { font-size: 10.5px; }
   .gridjs-td { font-size: 11px; }
   .footnote { font-size: 10px; color: var(--text-faint); margin-top: 8px; line-height: 1.6; }
@@ -112,11 +112,12 @@
 <h1>AI Infra Summit 2026 — ABX Engagement Dashboard <button class="info-icon-btn" onclick="toggleInfoPopover('mainInfoBanner')" title="What is this dashboard?">?</button></h1>
 <div class="subtitle">Source: live Salesforce sync (<b>clockwork-sfdc-sync-aiinfra26</b>) &middot; campaign <a href="https://clockworksystems.lightning.force.com/lightning/r/Campaign/701TV00000tqRm2YAE/view" target="_blank" rel="noopener" style="color:var(--blue)">701TV00000tqRm2YAE</a> &middot; auto-refreshes every 6 hours &middot; <span id="loadedAt"></span></div>
 
-<div class="banner" id="mainInfoBanner" style="display:none;">Live data pulled directly from Salesforce via a scheduled GitHub Action (clockwork-sfdc-sync-aiinfra26). Two tabs: Pre-Event Analysis (attendee roster cross-referenced against ABM tiers + open pipeline, ahead of the event) and Event &amp; Post-Event (live booth-scan funnel, once Leads start flowing in from the campaign).</div>
+<div class="banner" id="mainInfoBanner" style="display:none;">Live data pulled directly from Salesforce via a scheduled GitHub Action (clockwork-sfdc-sync-aiinfra26). Three tabs: Pre-Event Analysis (attendee roster cross-referenced against ABM tiers + open pipeline, ahead of the event), Event &amp; Post-Event (live booth-scan funnel, once Leads start flowing in from the campaign), and Account Engagement / HubSpot (portal-wide Marketing Qualified Account rollup from HubSpot contact activity, joined to Salesforce ABM tiers).</div>
 
 <div class="tab-nav">
   <button class="tab-btn active" data-tab="preEvent" onclick="showTab('preEvent')">Pre-Event Analysis</button>
   <button class="tab-btn" data-tab="eventPost" onclick="showTab('eventPost')">Event &amp; Post-Event</button>
+  <button class="tab-btn" data-tab="hubspot" onclick="showTab('hubspot')">Account Engagement (HubSpot)</button>
 </div>
 
 <div class="tab-panel" id="tab-preEvent">
@@ -127,6 +128,10 @@
   <div id="dataBanner"></div>
   <div id="mainContent"></div>
   <div id="yoyContent"></div>
+</div>
+
+<div class="tab-panel" id="tab-hubspot" style="display:none;">
+  <div id="hubspotContent"></div>
 </div>
 
 <div class="footnote">
@@ -140,7 +145,8 @@
       &bull; <b>Pipeline default value is $200,000</b> per account with no real open Opportunity.<br/>
       &bull; "GTM persona" is a heuristic classification from job-title keywords, not a Salesforce field — treat as a starting point, not ground truth.<br/>
       &bull; Data refreshes automatically every 6 hours via the clockwork-sfdc-sync-aiinfra26 GitHub Action; re-open this page to see the latest snapshot as of load time.<br/>
-      &bull; <b>Year-over-Year (2025 vs 2026)</b>: 2025 figures come from a saved Salesforce report (Contacts already converted from Leads, tied to the "Booth Scans | AI Infra Summit 2025" campaign, at In Progress (SAL) or Open Deal stage) — a post-event snapshot. 2026 figures come from the live Lead/CampaignMember sync for this year's campaign, captured pre-event. Different object types (Contact vs. Lead) at different funnel stages, captured at different points in each event's lifecycle — this is directional context, not a strict apples-to-apples comparison.
+      &bull; <b>Year-over-Year (2025 vs 2026)</b>: 2025 figures come from a saved Salesforce report (Contacts already converted from Leads, tied to the "Booth Scans | AI Infra Summit 2025" campaign, at In Progress (SAL) or Open Deal stage) — a post-event snapshot. 2026 figures come from the live Lead/CampaignMember sync for this year's campaign, captured pre-event. Different object types (Contact vs. Lead) at different funnel stages, captured at different points in each event's lifecycle — this is directional context, not a strict apples-to-apples comparison.<br/>
+      &bull; <b>Account Engagement (HubSpot)</b>: portal-wide, not scoped to this event. A Company becomes a Marketing Qualified Account (MQA) the moment ANY associated Contact reaches HubSpot lifecyclestage Marketing Qualified Lead (MQL) or later (Sales Accepted Lead, SQL, Opportunity, Customer) — this HubSpot portal has no native numeric lead-scoring field, so the lifecycle-stage funnel IS the scoring methodology, and this status is a ratchet (doesn't revert if a contact's stage later drops). Joined to Salesforce Accounts by domain (Company.domain vs. Account.Website), same technique used elsewhere on this page — accounts with no domain match show as "Not Matched to Salesforce". Refreshes on the same 6-hour schedule as the rest of this page (clockwork-sfdc-sync-aiinfra26 GitHub Action, sync_hubspot.py).
     </div>
   </span>
 </div>
@@ -163,8 +169,9 @@ function toggleInfoPopover(id) {
 
 function showTab(name) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
-  document.getElementById('tab-preEvent').style.display = name === 'preEvent' ? '' : 'none';
-  document.getElementById('tab-eventPost').style.display = name === 'eventPost' ? '' : 'none';
+  ['preEvent', 'eventPost', 'hubspot'].forEach(t => {
+    document.getElementById('tab-' + t).style.display = (t === name) ? '' : 'none';
+  });
 }
 
 function esc(s) {
@@ -429,6 +436,62 @@ function renderPreEventAnalysis(data) {
   }
 }
 
+function renderHubspotEngagement(data) {
+  const s = data.summary || {};
+  const companies = data.companies || [];
+  const mqaRows = companies.filter(c => c.is_mqa);
+  const tierOrder = ['Tier 1', 'Tier 2', 'Tier 3', 'Tier 4', 'Untiered', 'Not Matched to Salesforce'];
+  const tierBreakdown = s.tier_breakdown || {};
+  const tierLabels = tierOrder.filter(t => tierBreakdown[t]);
+  const genDate = data.generated_at ? new Date(data.generated_at).toLocaleString() : '—';
+  const mqaPct = s.companies_with_contacts ? Math.round((s.mqa_count / s.companies_with_contacts) * 100) : 0;
+  const matchPct = s.mqa_count ? Math.round((s.sfdc_matched_mqa_count / s.mqa_count) * 100) : 0;
+
+  const html = `
+    <div class="subtitle">Portal-wide HubSpot Contact activity rolled up to the Company level, joined to Salesforce ABM tiers by domain &middot; snapshot generated ${esc(genDate)}</div>
+    <div class="kpi-row">
+      <div class="kpi-card"><div class="name">Companies with Contacts</div><div class="stat-value">${s.companies_with_contacts ?? 0}</div><div class="stat-sub">HubSpot companies with &ge;1 associated contact</div></div>
+      <div class="kpi-card"><div class="name">Marketing Qualified Accounts</div><div class="stat-value">${s.mqa_count ?? 0}</div><div class="stat-sub">${mqaPct}% of companies with contacts</div></div>
+      <div class="kpi-card"><div class="name">Matched to Salesforce</div><div class="stat-value">${s.sfdc_matched_count ?? 0}</div><div class="stat-sub">by domain, of all companies with contacts</div></div>
+      <div class="kpi-card"><div class="name">MQAs Matched to Salesforce</div><div class="stat-value">${s.sfdc_matched_mqa_count ?? 0}</div><div class="stat-sub">${matchPct}% of MQAs — verified against ABM tier</div></div>
+    </div>
+    <div class="charts-row">
+      <div class="chart-card"><h3>MQAs by Salesforce ABM tier</h3><div class="hint">Where MQAs land once matched to a real Account</div><div class="chart-wrap"><canvas id="hubspotTierChart"></canvas></div></div>
+      <div class="chart-card"><h3>MQA vs. not yet qualified</h3><div class="hint">Of all companies with &ge;1 HubSpot contact</div><div class="chart-wrap pie-wrap"><canvas id="hubspotMqaSplitChart"></canvas></div></div>
+      <div class="chart-card"><h3>Highest lifecycle stage (MQAs)</h3><div class="hint">Best contact's stage per MQA company</div><div class="chart-wrap pie-wrap"><canvas id="hubspotLifecycleChart"></canvas></div></div>
+    </div>
+
+    <details class="table-drop" open>
+      <summary>Marketing Qualified Accounts <span class="drop-count">— ${mqaRows.length} account${mqaRows.length===1?'':'s'}</span></summary>
+      <div id="hubspotMqaGrid"></div>
+    </details>
+  `;
+  document.getElementById('hubspotContent').innerHTML = html;
+
+  renderGroupedBarChart('hubspotTierChart', tierLabels, [
+    { label: 'MQAs', data: tierLabels.map(t => tierBreakdown[t] || 0), backgroundColor: '#abbed9' },
+  ]);
+  renderPieChart('hubspotMqaSplitChart', {
+    'Marketing Qualified Account': s.mqa_count || 0,
+    'Not Yet Qualified': (s.companies_with_contacts || 0) - (s.mqa_count || 0),
+  });
+  renderPieChart('hubspotLifecycleChart', countBy(mqaRows, r => r.highest_lifecyclestage));
+
+  if (mqaRows.length) {
+    new gridjs.Grid({
+      columns: ['Company', 'Domain', 'Industry', 'Highest Lifecycle Stage', 'MQL+ Contacts', 'Total Contacts',
+        'Salesforce Tier', 'Salesforce Owner', 'Account (SFDC)'],
+      data: mqaRows.map(r => [r.name, r.domain || '—', r.industry || '—', r.highest_lifecyclestage,
+        r.mql_plus_contact_count, r.contact_count, r.sfdc_tier || 'Not Matched to Salesforce',
+        r.sfdc_owner || '—', sfdcLinkCell(r.account_sfdc_link)]),
+      search: true, sort: true, resizable: true, pagination: { limit: 25 },
+      style: { table: { 'font-size': '11px' } },
+    }).render(document.getElementById('hubspotMqaGrid'));
+  } else {
+    document.getElementById('hubspotMqaGrid').innerHTML = '<div class="chart-empty" style="height:60px;">No Marketing Qualified Accounts yet.</div>';
+  }
+}
+
 function renderBarChart(canvasId, counts, label) {
   const ctx = document.getElementById(canvasId);
   if (!ctx) return;
@@ -587,9 +650,21 @@ async function initEventPost() {
   }
 }
 
+async function initHubspotEngagement() {
+  try {
+    const hubspotData = await fetchJson('data/hubspot_mqa.json');
+    renderHubspotEngagement(hubspotData);
+  } catch (err) {
+    console.warn('HubSpot MQA data unavailable:', err);
+    document.getElementById('hubspotContent').innerHTML =
+      '<div class="banner warn">HubSpot account-engagement data not available yet (data/hubspot_mqa.json). This is wired and will populate once the sync_hubspot.py step of the sync workflow has a HUBSPOT_ACCESS_TOKEN secret in place and runs successfully.</div>';
+  }
+}
+
 (function init() {
   initPreEvent();
   initEventPost();
+  initHubspotEngagement();
 })();
 </script>
 </body>
