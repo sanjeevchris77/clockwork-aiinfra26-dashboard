@@ -1,574 +1,466 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Linux Foundation | SemiAnalysis Webinar · Campaign Report</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<meta charset="UTF-8" />
+<title>AI Infra Summit 2026 — ABX Engagement Dashboard</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridjs@5.0.2/dist/theme/mermaid.min.css" integrity="sha384-jZvDSsmGB9oGGT/4l9bHXGoAv1OxvG/cFmSo0dZaSqmBgvQTKDBFAMftlXTmMbNW" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/gridjs@5.0.2/dist/gridjs.umd.js" integrity="sha384-/XXDzxe4FsGiAe50i/u9pY/Vy/uX654MHB1xoc1BJNnH1WXHhqHga9g3q5tF4gj7" crossorigin="anonymous"></script>
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { font-size: 14px; scroll-behavior: smooth; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-weight: 400; line-height: 1.6; min-height: 100vh; background: #f5f5f3; color: #1a1a1a; }
+  :root {
+    color-scheme: dark;
+    --bg: #0a0b0d;
+    --bg-1: #131519;
+    --bg-2: #1a1d23;
+    --bg-3: #20242b;
+    --border: #2a2e37;
+    --border-soft: #23262d;
+    --text: #e7e9ec;
+    --text-dim: #9aa2af;
+    --text-faint: #6b7280;
+    --blue: #abbed9;
+    --blue-soft: #1c2a44;
+    --purple: #d1cae7;
+    --purple-soft: #241f3d;
+    --green: #83b7a4;
+    --green-soft: #12271f;
+    --red: #e1bbbb;
+    --red-soft: #2a1616;
+    --amber: #ccb886;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 14px;
+    font-size: 13px;
+  }
+  .page { max-width: 1180px; margin: 0 auto; }
+  h1 { font-size: 17px; margin: 0 0 2px 0; font-weight: 700; letter-spacing: -.01em; }
+  h2.section { font-size: 12.5px; margin: 16px 0 3px 0; color: var(--text-dim); text-transform: uppercase; letter-spacing: .04em; font-weight: 700; }
+  .section-hint { font-size: 10.5px; color: var(--text-faint); margin-bottom: 6px; }
+  .subtitle { color: var(--text-faint); font-size: 11.5px; margin-bottom: 10px; }
+  .subtitle b { color: var(--text-dim); }
+  .banner { font-size: 11px; padding: 6px 10px; border-radius: 6px; margin-bottom: 10px; background: var(--blue-soft); color: #cad6e8; border: 1px solid #26385c; }
+  .banner.warn { background: #362c14; color: var(--amber); border-color: #4a3c1c; }
+  .info-icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 17px; height: 17px; border-radius: 50%; background: var(--blue-soft); color: #cad6e8; border: 1px solid #26385c; font-size: 10.5px; font-weight: 700; cursor: pointer; vertical-align: middle; margin-left: 7px; line-height: 1; padding: 0; }
+  .info-icon-btn:hover { background: #26385c; }
+  .kpi-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+  .kpi-card { flex: 1; min-width: 150px; background: var(--bg-1); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; }
+  .kpi-card .name { font-weight: 600; font-size: 10px; margin-bottom: 4px; color: var(--text-faint); text-transform: uppercase; letter-spacing: .03em; }
+  .kpi-card .stat-value { font-size: 17px; font-weight: 700; color: var(--text); }
+  .kpi-card .stat-sub { font-size: 10px; color: var(--text-faint); margin-top: 2px; }
+  .charts-row { display: flex; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+  .chart-card { flex: 1; min-width: 230px; background: var(--bg-1); border: 1px solid var(--border); border-radius: 8px; padding: 9px 11px; }
+  .chart-card h3 { font-size: 10px; margin: 0 0 1px 0; color: var(--text); font-weight: 600; }
+  .chart-card .hint { font-size: 8.5px; color: var(--text-faint); margin-bottom: 5px; }
+  .chart-wrap { position: relative; height: 170px; }
+  .chart-wrap.pie-wrap { height: 260px; }
+  .chart-empty { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-faint); font-size: 10.5px; }
+  #accountGrid, #leadGrid, #oppGrid { background: var(--bg-1); border-radius: 8px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 6px; }
+  .gridjs-th { font-size: 10.5px; }
+  .gridjs-td { font-size: 11px; }
+  .footnote { font-size: 10px; color: var(--text-faint); margin-top: 8px; line-height: 1.6; }
+  .footnote b { color: var(--text-dim); }
+  .tag { display: inline-block; font-size: 9.5px; padding: 1px 6px; border-radius: 999px; margin: 1px 2px 1px 0; }
+  .tag-engaged { background: var(--red-soft); color: #e8caca; font-weight: 600; }
+  .tag-netnew { background: var(--green-soft); color: #bcd9ce; font-weight: 600; }
 
-/* ── black header ── */
-.site-header { background: #000; height: 60px; padding: 0 28px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 200; }
-.header-left { display: flex; align-items: center; gap: 20px; }
-.header-divider { width: 1px; height: 28px; background: rgba(255,255,255,0.18); }
-.header-campaign { font-size: 12px; color: rgba(255,255,255,0.5); letter-spacing: .01em; white-space: nowrap; }
-.header-campaign b { color: rgba(255,255,255,0.85); font-weight: 500; }
-.header-meta { font-size: 11px; color: rgba(255,255,255,0.35); letter-spacing: .02em; }
+  .funnel-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 0 3px 0; }
+  .funnel-row { height: 28px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 11px; font-weight: 600; border-radius: 4px; white-space: nowrap; }
+  .funnel-row .funnel-count { margin-left: 6px; font-weight: 700; }
+  .funnel-row .funnel-pct { margin-left: 5px; font-weight: 400; opacity: .85; font-size: 9.5px; }
 
-/* ── outer tab nav ── */
-.tab-nav { background: #fff; border-bottom: 1px solid rgba(0,0,0,0.08); padding: 0 28px; display: flex; }
-.tab-btn { font-size: 12px; font-weight: 500; color: #888; background: none; border: none; padding: 13px 18px 14px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color .15s, border-color .15s; letter-spacing: .01em; }
-.tab-btn:hover { color: #444; }
-.tab-btn.active { color: #1a1a1a; border-bottom-color: #1a1a1a; }
+  .methodology-wrap { position: relative; display: inline-block; }
+  .methodology-tooltip { display: none; position: absolute; bottom: calc(100% + 6px); left: 0; z-index: 30; background: #05060a; color: #d7dadf; padding: 10px 12px; border-radius: 6px; font-size: 10px; line-height: 1.6; white-space: normal; width: 540px; max-width: 80vw; box-shadow: 0 4px 14px rgba(0,0,0,.5); border: 1px solid var(--border); }
+  .methodology-tooltip b { color: var(--text-dim); font-weight: 600; }
+  .methodology-wrap:hover .methodology-tooltip { display: block; }
 
-/* ── panes ── */
-.tab-pane { display: none; padding: 24px 28px 60px; }
-.tab-pane.active { display: block; }
-.sub-nav { display: flex; border-bottom: 1px solid rgba(0,0,0,0.08); margin-bottom: 22px; margin-top: 4px; }
-.sub-btn { font-size: 12px; font-weight: 500; color: #999; background: none; border: none; padding: 8px 14px 10px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color .15s, border-color .15s; }
-.sub-btn:hover { color: #555; }
-.sub-btn.active { color: #1a1a1a; border-bottom-color: #1a1a1a; }
-.sub-pane { display: none; }
-.sub-pane.active { display: block; }
+  details.table-drop { background: var(--bg-1); border: 1px solid var(--border); border-radius: 8px; margin: 8px 0; padding: 0 12px; }
+  details.table-drop[open] { padding-bottom: 10px; }
+  details.table-drop summary { cursor: pointer; list-style: none; padding: 9px 0; font-size: 11.5px; font-weight: 700; color: var(--text); display: flex; align-items: center; justify-content: space-between; }
+  details.table-drop summary::-webkit-details-marker { display: none; }
+  details.table-drop summary::after { content: "▾"; color: var(--text-faint); font-size: 10px; transition: transform .15s; margin-left: 8px; }
+  details.table-drop[open] summary::after { transform: rotate(180deg); }
+  details.table-drop summary .drop-count { font-weight: 400; color: var(--text-faint); text-transform: none; letter-spacing: 0; margin-left: 6px; font-size: 10.5px; }
 
-/* ── page titles ── */
-.page-title { font-size: 18px; font-weight: 600; color: #1a1a1a; margin-bottom: 4px; letter-spacing: -.01em; }
-.page-sub { font-size: 12px; color: #999; margin-bottom: 12px; }
-.page-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px; }
-.pbadge { font-size: 11px; padding: 3px 9px; border-radius: 5px; border: 1px solid rgba(0,0,0,0.1); color: #666; background: #fff; }
-.pbadge.live { background: #E1F5EE; color: #085041; border-color: rgba(13,110,86,.2); }
-
-/* ── kpi grid ── */
-.kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(136px, 1fr)); gap: 8px; margin-bottom: 24px; }
-.kpi { background: #F1EFE8; border-radius: 8px; padding: 13px 15px; }
-.kpi-label { font-size: 11px; color: #888; margin-bottom: 5px; text-transform: uppercase; letter-spacing: .05em; }
-.kpi-value { font-size: 22px; font-weight: 600; color: #1a1a1a; line-height: 1.1; }
-.kpi-sub { font-size: 11px; color: #aaa; margin-top: 3px; }
-
-/* ── section title ── */
-.sec-title { font-size: 11px; font-weight: 500; color: #aaa; text-transform: uppercase; letter-spacing: .07em; margin-bottom: 10px; margin-top: 24px; display: flex; align-items: center; gap: 8px; }
-.sec-title::after { content: ''; flex: 1; height: 1px; background: rgba(0,0,0,0.07); }
-.sec-title:first-child { margin-top: 0; }
-
-/* ── grids ── */
-.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-@media (max-width: 620px) { .grid2 { grid-template-columns: 1fr; } }
-
-/* ── cards ── */
-.card { background: #fff; border: 1px solid rgba(0,0,0,0.08); border-radius: 12px; padding: 14px 16px; }
-.card-title { font-size: 13px; font-weight: 500; color: #1a1a1a; margin-bottom: 12px; }
-
-/* ── info box ── */
-.info-box { background: #F1EFE8; border-left: 2px solid #1a1a1a; border-radius: 0 8px 8px 0; padding: 10px 14px; font-size: 12px; color: #555; margin-bottom: 18px; line-height: 1.6; }
-.info-box b { color: #1a1a1a; font-weight: 500; }
-
-/* ── funnel ── */
-.funnel-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid rgba(0,0,0,0.05); }
-.funnel-row:last-child { border-bottom: none; }
-.funnel-lbl { width: 82px; font-size: 11px; color: #888; flex-shrink: 0; }
-.funnel-track { flex: 1; height: 5px; background: #F1EFE8; border-radius: 3px; overflow: hidden; }
-.funnel-fill { height: 100%; border-radius: 3px; }
-.funnel-n { width: 46px; text-align: right; font-size: 12px; font-weight: 500; }
-.funnel-pct { width: 34px; text-align: right; font-size: 11px; color: #aaa; }
-
-/* ── chart wrap ── */
-.chart-wrap { position: relative; width: 100%; }
-
-/* ── tables ── */
-.tbl-wrap { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; font-size: 12px; table-layout: fixed; }
-th { text-align: left; font-size: 11px; font-weight: 500; color: #aaa; padding: 8px 10px; border-bottom: 1px solid rgba(0,0,0,0.1); background: #fafafa; letter-spacing: .02em; }
-td { padding: 8px 10px; border-bottom: 1px solid rgba(0,0,0,0.05); color: #1a1a1a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; }
-tr:hover td { background: #fafafa; }
-.tbl-footer { font-size: 11px; color: #aaa; text-align: right; margin-top: 8px; }
-
-/* ── badges ── */
-.badge { display: inline-block; padding: 2px 7px; border-radius: 5px; font-size: 10px; font-weight: 500; }
-.b-lead { background: #E6F1FB; color: #0C447C; }
-.b-mql  { background: #EAF3DE; color: #27500A; }
-.b-sal  { background: #FAEEDA; color: #633806; }
-.b-sqo  { background: #EEEDFE; color: #3C3489; }
-.b-cust { background: #E1F5EE; color: #085041; }
-.b-rem  { background: #F1EFE8; color: #444441; }
-.b-att  { background: #E1F5EE; color: #085041; }
-.b-reg  { background: #E6F1FB; color: #185FA5; }
-.b-ai   { background: #EEEDFE; color: #3C3489; }
-.b-prac { background: #EAF3DE; color: #3B6D11; }
-
-/* ── signal badges ── */
-.signal { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 500; }
-.sig-click { background: #EEEDFE; color: #3C3489; }
-.sig-open  { background: #E1F5EE; color: #085041; }
-.sig-cold  { background: #F1EFE8; color: #5F5E5A; }
-.sig-warn  { background: #FCEBEB; color: #791F1F; }
-
-/* ── filter bar ── */
-.filter-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
-.filter-bar input, .filter-bar select { background: #fff; border: 1px solid rgba(0,0,0,0.12); border-radius: 7px; color: #1a1a1a; font-size: 12px; padding: 7px 11px; outline: none; font-family: inherit; transition: border-color .15s; }
-.filter-bar input:focus, .filter-bar select:focus { border-color: #1a1a1a; }
-.filter-bar input { min-width: 190px; }
-
-/* ── progress rows ── */
-.prog-row { display: flex; align-items: center; gap: 8px; margin: 5px 0; }
-.prog-lbl { width: 68px; font-size: 11px; color: #999; }
-.prog { flex: 1; height: 4px; background: #F1EFE8; border-radius: 2px; overflow: hidden; }
-.prog-fill { height: 100%; border-radius: 2px; }
-.prog-pct { width: 34px; text-align: right; font-size: 11px; color: #aaa; }
-
-/* ── email card ── */
-.email-card { background: #fff; border: 1px solid rgba(0,0,0,0.08); border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; }
-.email-card-title { font-size: 12px; font-weight: 500; color: #1a1a1a; margin-bottom: 10px; }
-.email-stat { font-size: 11px; color: #888; line-height: 2; }
-.email-stat b { color: #1a1a1a; font-weight: 500; }
-
-/* ── notable cards ── */
-.notable-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px; }
-.notable-card { background: #fff; border: 1px solid rgba(0,0,0,0.08); border-radius: 12px; padding: 12px 14px; display: flex; align-items: flex-start; gap: 10px; transition: border-color .15s; }
-.notable-card:hover { border-color: rgba(0,0,0,0.18); }
-.avatar { width: 36px; height: 36px; border-radius: 50%; background: #E6F1FB; color: #0C447C; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; flex-shrink: 0; border: 1px solid rgba(0,0,0,0.06); }
-.notable-name  { font-size: 12px; font-weight: 500; color: #1a1a1a; line-height: 1.3; }
-.notable-title { font-size: 11px; color: #777; margin-top: 2px; line-height: 1.3; }
-.notable-co    { font-size: 10px; color: #aaa; margin-top: 1px; }
-
-/* ── cohort cards ── */
-.cohort-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
-.cohort-card { background: #fff; border: 1px solid rgba(0,0,0,0.08); border-radius: 12px; padding: 14px 16px; }
-.cohort-label { font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; color: #aaa; margin-bottom: 6px; }
-.cohort-val   { font-size: 26px; font-weight: 600; color: #1a1a1a; line-height: 1.1; }
-.cohort-sub   { font-size: 11px; color: #aaa; margin-top: 4px; }
-.cohort-prog  { height: 3px; background: #F1EFE8; border-radius: 2px; overflow: hidden; margin-top: 10px; }
-.cohort-prog-fill { height: 100%; border-radius: 2px; }
-
-/* ── campaign cards ── */
-.campaign-card { background: #fff; border: 1px solid rgba(0,0,0,0.08); border-radius: 12px; padding: 14px 18px; margin-bottom: 10px; display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
-.campaign-card.primary { border-color: rgba(0,0,0,0.18); }
-.campaign-name { font-size: 13px; font-weight: 500; color: #1a1a1a; margin-bottom: 3px; }
-.campaign-meta { font-size: 11px; color: #aaa; }
-.campaign-meta b { color: #27500A; font-weight: 500; }
-
-/* ── tier section ── */
-.tier-header { display: flex; align-items: center; gap: 10px; padding: 11px 0 9px; border-bottom: 1px solid rgba(0,0,0,0.07); margin-bottom: 4px; flex-wrap: wrap; }
-.tier-pill { font-size: 10px; font-weight: 500; padding: 3px 9px; border-radius: 5px; }
-.tier-count { font-size: 11px; color: #aaa; }
-.tier-why   { font-size: 11px; color: #aaa; margin-left: auto; max-width: 300px; text-align: right; }
-
-/* ── score bar ── */
-.score-bar { display: flex; align-items: center; gap: 6px; }
-.sbar { height: 4px; border-radius: 2px; min-width: 4px; }
-.score-n { font-size: 11px; font-weight: 500; }
-
-/* ── action cards ── */
-.action-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); gap: 8px; margin-top: 12px; }
-.action-card { background: #F1EFE8; border-radius: 8px; padding: 12px 13px; }
-.action-tier { font-size: 10px; font-weight: 500; margin-bottom: 5px; text-transform: uppercase; letter-spacing: .04em; }
-.action-msg  { font-size: 11px; color: #666; line-height: 1.5; }
-
-/* ── suppress box ── */
-.suppress-box { background: #FCEBEB; border: 1px solid rgba(163,45,45,.15); border-radius: 8px; padding: 11px 14px; margin-top: 12px; font-size: 11px; color: #791F1F; line-height: 1.6; }
-.suppress-box b { color: #501313; font-weight: 500; }
-
-/* ── hs link ── */
-a.hs-link { font-size: 11px; color: #185FA5; text-decoration: none; opacity: .8; }
-a.hs-link:hover { opacity: 1; text-decoration: underline; }
-
-/* ── legend ── */
-.legend { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 10px; }
-.legend span { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #888; }
-.ldot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+  .gridjs-wrapper { background: var(--bg-1) !important; border: none !important; box-shadow: none !important; }
+  .gridjs-table { background: var(--bg-1) !important; color: var(--text) !important; }
+  th.gridjs-th { background: var(--bg-2) !important; color: var(--text-faint) !important; border-color: var(--border) !important; }
+  td.gridjs-td { background: var(--bg-1) !important; color: var(--text) !important; border-color: var(--border-soft) !important; }
+  .gridjs-tr:hover td.gridjs-td { background: var(--bg-2) !important; }
+  .gridjs-footer { background: var(--bg-1) !important; border-color: var(--border) !important; }
+  .gridjs-pagination { color: var(--text-dim) !important; }
+  .gridjs-pagination button { background: var(--bg-2) !important; color: var(--text-dim) !important; border-color: var(--border) !important; }
+  .gridjs-pagination button:hover:not([disabled]) { background: var(--bg-3) !important; }
+  .gridjs-pagination button:disabled { opacity: .4; }
+  .gridjs-search-input { background: var(--bg-2) !important; color: var(--text) !important; border-color: var(--border) !important; }
+  .gridjs-input::placeholder { color: var(--text-faint); }
+  .gridjs-summary { color: var(--text-faint) !important; }
 </style>
 </head>
 <body>
+<div class="page">
 
-<header class="site-header">
-  <div class="header-left">
-    <div>
-      <svg xmlns="http://www.w3.org/2000/svg" width="88" height="38" viewBox="0 0 110 48" fill="none">
-        <g clip-path="url(#lc)">
-          <path d="M11.4276 0C12.4331 0 13.399.112 14.3253.327 15.2516.547 16.1184.865 16.9308 1.28 17.7382 1.695 18.4663 2.198 19.1152 2.799 19.7641 3.395 20.309 4.069 20.7548 4.816L17.0249 7.068C16.4057 6.14 15.6132 5.412 14.6621 4.889 13.7111 4.367 12.6213 4.108 11.3978 4.108c-.9857 0-1.8971.171-2.7342.513C7.8215 4.963 7.0983 5.441 6.48903 6.052 5.87977 6.667 5.39929 7.405 5.05255 8.265 4.70581 9.129 4.53244 10.082 4.53244 11.122c0 1.04.17832 2.042.53497 2.911.35664.87.84208 1.607 1.46125 2.218.61422.61 1.34237 1.074 2.17454 1.401.83217.327 1.73367.493 2.6946.493 1.2136 0 2.2984-.254 3.2594-.767.956-.513 1.7634-1.236 2.4172-2.178l3.5467 2.515c-.4855.694-1.0502 1.324-1.6941 1.886-.6439.561-1.3523 1.04-2.13 1.431-.7776.395-1.6148.693-2.5163.903-.9015.21-1.8476.312-2.8432.312-1.6792 0-3.2197-.273-4.6166-.83C5.42405 20.867 4.21543 20.095 3.20493 19.103 2.19444 18.112 1.40685 16.935.852071 15.577.292338 14.219.00999451 12.729.00999451 11.117c0-1.612.282349-3.102.842081-4.46C1.4118 5.3 2.19444 4.123 3.20493 3.131 4.21543 2.139 5.4191 1.368 6.82091.816 8.20786.278 9.74836 0 11.4276 0z" fill="white"/>
-          <path d="M37.2743 21.858H24.5143V.4h4.3392v17.458h8.4208v3.9z" fill="white"/>
-          <path d="M77.0253 0c1.0055 0 1.9714.112 2.8977.327.9263.22 1.7981.537 2.6055.952.8074.415 1.5355.918 2.1844 1.519.6489.596 1.1938 1.27 1.6396 2.017L82.6226 7.068C81.9985 6.14 81.2158 5.412 80.2598 4.889 79.3038 4.367 78.219 4.108 76.9955 4.108c-.9857 0-1.8971.171-2.7342.513-.8372.342-1.5653.821-2.1746 1.431-.6093.616-1.0898 1.353-1.4366 2.213-.3467.865-.5201 1.817-.5201 2.857 0 1.04.1784 2.042.5350 2.911.3566.87.8421 1.607 1.4563 2.218.6142.61 1.3423 1.074 2.1745 1.401.8322.327 1.7337.493 2.6946.493 1.2136 0 2.2984-.254 3.2594-.767.956-.513 1.7634-1.236 2.4172-2.178l3.5467 2.515c-.4855.694-1.0502 1.324-1.6941 1.886-.6439.561-1.3523 1.04-2.13 1.431-.7776.395-1.6148.693-2.5212.903-.9016.21-1.8477.312-2.8433.312-1.6792 0-3.2197-.273-4.6166-.83C71.0168 20.867 69.8082 20.095 68.7977 19.103 67.7872 18.112 66.9996 16.935 66.4448 15.577 65.8851 14.219 65.6027 12.729 65.6027 11.117c0-1.612.2824-3.102.8421-4.46C67.0045 5.3 67.7872 4.123 68.7977 3.131 69.8082 2.139 71.0118 1.368 72.4137.816 73.8056.278 75.3461 0 77.0253 0z" fill="white"/>
-          <path d="M96.6308 13.032H94.6247V21.863H90.2905V.4H94.6247V9.09H96.6754L103.873.4H109.316L100.187 10.868 110 21.863H104.373L96.6308 13.032z" fill="white"/>
-          <path d="M30.7804 47.6H25.5248L20.8637 32.272 16.1976 47.6H10.942L4.44815 26.137H8.95574L13.6317 42.603 18.5009 26.137H23.3008L28.17 42.603 32.846 26.137H37.2743L30.7804 47.6z" fill="white"/>
-          <path d="M77.7485 26.137c1.2928 0 2.442.147 3.4376.445.9956.298 1.8278.723 2.5015 1.28.6736.557 1.1838 1.241 1.5207 2.057.3418.811.5151 1.729.5151 2.75 0 .879-.1486 1.685-.4507 2.423-.2972.732-.7381 1.372-1.3127 1.914-.5746.542-1.273.982-2.1002 1.324-.8223.342-1.7585.567-2.8036.664l6.6969 8.602H80.4976L74.1573 39.057H70.566V47.6H66.2269V26.137H77.7485zM70.566 30.079V35.335H77.6692c1.1938 0 2.0903-.215 2.6897-.65.5994-.434.9015-1.104.9015-2.017 0-.914-.3071-1.553-.9263-1.969-.6191-.414-1.5058-.62-2.6649-.62H70.566z" fill="white"/>
-          <path d="M96.6308 38.768H94.6247V47.6H90.2905V26.137H94.6247V34.831H96.6754L103.873 26.137H109.316L100.187 36.609 110 47.6H104.373L96.6308 38.768z" fill="white"/>
-          <path d="M40.7318 5.734C37.7102 11.107 39.6767 17.882 45.1304 20.862 50.584 23.841 57.4494 21.897 60.471 16.524 63.4926 11.146 61.5211 4.377 56.0724 1.397 50.6237-1.583 43.7533.361 40.7318 5.734zM56.8303 14.536C54.948 17.882 50.6336 19.074 47.1959 17.193 44.427 15.679 43.0698 12.636 43.6295 9.759L49.5537 12.998 51.6589 9.256 45.7396 6.023C47.9142 4.039 51.2478 3.566 54.0118 5.075 57.4494 6.956 58.7126 11.19 56.8303 14.541" fill="white"/>
-          <path d="M40.7318 31.471C37.7102 36.844 39.6767 43.619 45.1304 46.598 50.584 49.578 57.4494 47.634 60.471 42.261 63.4926 36.888 61.5211 30.113 56.0724 27.133 50.6237 24.154 43.7533 26.093 40.7318 31.471zM56.8303 40.273C54.948 43.619 50.6336 44.81 47.1959 42.93 44.427 41.416 43.0698 38.373 43.6295 35.496L49.5537 38.734 51.6589 34.993 45.7396 31.759C47.9142 29.776 51.2478 29.302 54.0118 30.811 57.4494 32.692 58.7126 36.927 56.8303 40.278" fill="white"/>
-        </g>
-        <defs><clipPath id="lc"><rect width="110" height="48" fill="white"/></clipPath></defs>
-      </svg>
+<h1>AI Infra Summit 2026 — ABX Engagement Dashboard <button class="info-icon-btn" onclick="toggleInfoPopover('mainInfoBanner')" title="What is this dashboard?">?</button></h1>
+<div class="subtitle">Source: live Salesforce sync (<b>clockwork-sfdc-sync-aiinfra26</b>) &middot; campaign <a href="https://clockworksystems.lightning.force.com/lightning/r/Campaign/701TV00000tqRm2YAE/view" target="_blank" rel="noopener" style="color:var(--blue)">701TV00000tqRm2YAE</a> &middot; auto-refreshes every 6 hours &middot; <span id="loadedAt"></span></div>
+
+<div class="banner" id="mainInfoBanner" style="display:none;">Live data pulled directly from Salesforce via a scheduled GitHub Action (clockwork-sfdc-sync-aiinfra26). Tracks two levels: (1) COMPANY-level engagement (did anyone at this account already know us before AI Infra Summit?) and (2) PERSON-level funnel stage (where is the specific contact in the pipeline?).</div>
+
+<div id="dataBanner"></div>
+
+<div id="mainContent"></div>
+
+<div id="yoyContent"></div>
+
+<div class="footnote">
+  <span class="methodology-wrap">
+    <b>Methodology</b> <span class="info-icon-btn" title="Hover for methodology details">?</span>
+    <div class="methodology-tooltip">
+      &bull; <b>Company Already Engaged</b> = Salesforce shows an existing Opportunity (any owner/team), an existing Contact, or another open Lead tied to that company's domain, from OUTSIDE this campaign's leads — i.e., someone at that company was already talking to us before/regardless of who we met via this campaign.<br/>
+      &bull; <b>Qualified</b> = real Salesforce Lead Status of "In Progress (MQL)" or "In Progress (SAL)" — not an estimate.<br/>
+      &bull; <b>Net New</b> Opportunity requires Lead Source exactly "AI Infra Summit 2026 Santa Clara" AND Created Date on/after 2026-09-15; everything else domain-matched is classified "Existing" pipeline.<br/>
+      &bull; <b>Pipeline default value is $200,000</b> per account with no real open Opportunity.<br/>
+      &bull; "GTM persona" is a heuristic classification from job-title keywords, not a Salesforce field — treat as a starting point, not ground truth.<br/>
+      &bull; "Company segment mix" (Hyperscaler / Neocloud / Enterprise / Startup / Other) from the RAISE template is intentionally omitted here — that was a manual judgment call per account, not synced data, and there are no accounts yet to classify.<br/>
+      &bull; Data refreshes automatically every 6 hours via the clockwork-sfdc-sync-aiinfra26 GitHub Action; re-open this page to see the latest snapshot as of load time.<br/>
+      &bull; <b>Year-over-Year (2025 vs 2026)</b>: 2025 figures come from a saved Salesforce report (Contacts already converted from Leads, tied to the "Booth Scans | AI Infra Summit 2025" campaign, at In Progress (SAL) or Open Deal stage) — a post-event snapshot. 2026 figures come from the live Lead/CampaignMember sync for this year's campaign, captured pre-event. Different object types (Contact vs. Lead) at different funnel stages, captured at different points in each event's lifecycle — this is directional context, not a strict apples-to-apples comparison.
     </div>
-    <div class="header-divider"></div>
-    <div class="header-campaign"><b>Linux Foundation × SemiAnalysis</b> · Webinar Campaign</div>
-  </div>
-  <div class="header-meta">Campaign 755531092717 · Apr 2026</div>
-</header>
-
-<nav class="tab-nav">
-  <button class="tab-btn active" onclick="switchTab('report',this)">Campaign report</button>
-  <button class="tab-btn" onclick="switchTab('targets',this)">Re-engagement targets</button>
-</nav>
-
-
-<!-- TAB 1 -->
-<div id="tab-report" class="tab-pane active">
-  <div class="page-title">[Webinar] Linux Foundation | SemiAnalysis Co-host | 2026-04</div>
-  <div class="page-sub">3–4 week email campaign · 8,101 contacts · webinar Apr 23, 2026</div>
-  <div class="page-badges">
-    <span class="pbadge live">Live · On-demand → Jun 30</span>
-    <span class="pbadge">9,548 influenced contacts</span>
-    <span class="pbadge">3 campaigns</span>
-    <span class="pbadge">ID 755531092717</span>
-  </div>
-
-  <div class="kpi-grid">
-    <div class="kpi"><div class="kpi-label">Influenced</div><div class="kpi-value">9,548</div><div class="kpi-sub">touched by campaign</div></div>
-    <div class="kpi"><div class="kpi-label">DB emailed</div><div class="kpi-value">8,101</div><div class="kpi-sub">HubSpot contacts</div></div>
-    <div class="kpi"><div class="kpi-label">Registered</div><div class="kpi-value">114</div><div class="kpi-sub">Linux webinar Apr 23</div></div>
-    <div class="kpi"><div class="kpi-label">Attended</div><div class="kpi-value">44–50</div><div class="kpi-sub">~40–44% show rate</div></div>
-    <div class="kpi"><div class="kpi-label">Reg. rate</div><div class="kpi-value">1.4%</div><div class="kpi-sub">of DB emailed</div></div>
-    <div class="kpi"><div class="kpi-label">New contacts</div><div class="kpi-value">51</div><div class="kpi-sub">net new from webinar</div></div>
-    <div class="kpi"><div class="kpi-label">Email touches</div><div class="kpi-value">1–11</div><div class="kpi-sub">sends per contact</div></div>
-    <div class="kpi"><div class="kpi-label">On-demand</div><div class="kpi-value">Active</div><div class="kpi-sub">ends Jun 30 2026</div></div>
-  </div>
-
-  <nav class="sub-nav">
-    <button class="sub-btn active" onclick="switchSub('sub-funnel',this)">Funnel stages</button>
-    <button class="sub-btn" onclick="switchSub('sub-email',this)">Email performance</button>
-    <button class="sub-btn" onclick="switchSub('sub-cohort',this)">Cohort analysis</button>
-    <button class="sub-btn" onclick="switchSub('sub-contacts',this)">Contact list</button>
-    <button class="sub-btn" onclick="switchSub('sub-notable',this)">Notable contacts</button>
-    <button class="sub-btn" onclick="switchSub('sub-campaigns',this)">Campaign map</button>
-  </nav>
-
-  <div id="sub-funnel" class="sub-pane active">
-    <div class="grid2">
-      <div class="card"><div class="card-title">Full DB funnel — 8,101 contacts</div><div id="funnelDB"></div></div>
-      <div class="card"><div class="card-title">Registrant funnel — 114 registered</div><div class="chart-wrap" style="height:210px"><canvas id="regChart" role="img" aria-label="Bar chart of registrant lifecycle stages">Lead 22, MQL 18, SAL 45, SQO 16, Customer 8, Other 5.</canvas></div></div>
-    </div>
-    <div class="grid2" style="margin-top:12px">
-      <div class="card">
-        <div class="card-title">Attended vs registered vs DB</div>
-        <div class="legend"><span><span class="ldot" style="background:#1D9E75"></span>Attended (~47)</span><span><span class="ldot" style="background:#378ADD"></span>Reg. only (67)</span><span><span class="ldot" style="background:#D3D1C7"></span>Not reg. (7,987)</span></div>
-        <div class="chart-wrap" style="height:190px"><canvas id="attendChart" role="img" aria-label="Doughnut chart">Attended 47, reg. only 67, not reg. 7987.</canvas></div>
-      </div>
-      <div class="card">
-        <div class="card-title">Cohort split — registrants</div>
-        <div class="legend"><span><span class="ldot" style="background:#7F77DD"></span>AI Infrastructure</span><span><span class="ldot" style="background:#639922"></span>Practitioners</span></div>
-        <div class="chart-wrap" style="height:190px"><canvas id="cohortChart" role="img" aria-label="Pie chart of cohort split">AI Infra 37, Practitioners 17.</canvas></div>
-      </div>
-    </div>
-  </div>
-
-  <div id="sub-email" class="sub-pane">
-    <div class="grid2">
-      <div>
-        <div class="email-card">
-          <div class="email-card-title">Send cadence — touches per contact</div>
-          <div class="prog-row"><span class="prog-lbl">1–2x</span><div class="prog"><div class="prog-fill" style="width:28%;background:#378ADD"></div></div><span class="prog-pct">28%</span></div>
-          <div class="prog-row"><span class="prog-lbl">3–4x</span><div class="prog"><div class="prog-fill" style="width:41%;background:#378ADD"></div></div><span class="prog-pct">41%</span></div>
-          <div class="prog-row"><span class="prog-lbl">5–7x</span><div class="prog"><div class="prog-fill" style="width:22%;background:#7F77DD"></div></div><span class="prog-pct">22%</span></div>
-          <div class="prog-row"><span class="prog-lbl">8–11x</span><div class="prog"><div class="prog-fill" style="width:9%;background:#E24B4A"></div></div><span class="prog-pct">9%</span></div>
-        </div>
-        <div class="email-card">
-          <div class="email-card-title">Last send date distribution</div>
-          <div class="email-stat"><div><b>Apr 22</b> — primary blast (bulk of DB)</div><div><b>Apr 15</b> — mid-campaign nurture</div><div><b>Apr 7</b> — early send wave</div><div><b>Pre-Apr</b> — legacy touchpoints</div></div>
-        </div>
-      </div>
-      <div>
-        <div class="email-card">
-          <div class="email-card-title">Engagement rates — sampled contacts</div>
-          <div class="prog-row"><span class="prog-lbl">Opened</span><div class="prog"><div class="prog-fill" style="width:34%;background:#1D9E75"></div></div><span class="prog-pct">~34%</span></div>
-          <div class="prog-row"><span class="prog-lbl">Clicked</span><div class="prog"><div class="prog-fill" style="width:8%;background:#639922"></div></div><span class="prog-pct">~8%</span></div>
-          <div class="prog-row"><span class="prog-lbl">No signal</span><div class="prog"><div class="prog-fill" style="width:58%;background:#D3D1C7"></div></div><span class="prog-pct">~58%</span></div>
-          <div style="margin-top:10px;font-size:11px;color:#aaa">Based on hs_email_last_open_date &amp; click_date presence in contact records.</div>
-        </div>
-        <div class="email-card">
-          <div class="email-card-title">Verified openers &amp; clickers</div>
-          <div style="display:flex;flex-direction:column;gap:7px">
-            <div style="font-size:11px;color:#555"><span style="color:#1a1a1a;font-weight:500">Assaf Pazner</span> · Dir. SW Dev, Eagle Seven · <span class="signal sig-click">clicked Apr 22</span></div>
-            <div style="font-size:11px;color:#555"><span style="color:#1a1a1a;font-weight:500">Mattan Erez</span> · Professor, UT Austin · <span class="signal sig-open">opened Apr 22</span></div>
-            <div style="font-size:11px;color:#555"><span style="color:#1a1a1a;font-weight:500">Jeff DeReus</span> · Sr Sysadmin, Univ. of Iowa · <span class="signal sig-open">opened Apr 7</span></div>
-            <div style="font-size:11px;color:#555"><span style="color:#1a1a1a;font-weight:500">Mayra Zavala</span> · Sovereign Data Centers · <span class="signal sig-open">opened Apr 14</span></div>
-            <div style="font-size:11px;color:#555"><span style="color:#1a1a1a;font-weight:500">Madhu Behera</span> · CRO, Emory University · <span class="signal sig-open">opened Jan 30</span></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div id="sub-cohort" class="sub-pane">
-    <div class="cohort-grid" id="cohortCards"></div>
-    <div class="sec-title">Top companies — registrant batch</div>
-    <div class="card"><div class="chart-wrap" style="height:380px"><canvas id="compChart" role="img" aria-label="Horizontal bar chart of top companies">Top companies by registrant count.</canvas></div></div>
-  </div>
-
-  <div id="sub-contacts" class="sub-pane">
-    <div class="filter-bar">
-      <input id="cSearch" placeholder="Search name, company, title…" oninput="filterContacts()">
-      <select id="cStage" onchange="filterContacts()"><option value="">All stages</option><option value="lead">Lead</option><option value="mql">MQL</option><option value="sal">SAL</option><option value="sqo">SQO</option><option value="customer">Customer</option></select>
-      <select id="cWebinar" onchange="filterContacts()"><option value="">All contacts</option><option value="attended">Attended</option><option value="registered">Registered only</option></select>
-      <select id="cCohort" onchange="filterContacts()"><option value="">All cohorts</option><option value="ai-infra">AI Infrastructure</option><option value="practitioner">Practitioner</option></select>
-    </div>
-    <div class="tbl-wrap">
-      <table><thead><tr><th style="width:130px">Name</th><th style="width:140px">Company</th><th style="width:150px">Title</th><th style="width:72px">Stage</th><th style="width:82px">Cohort</th><th style="width:82px">Webinar</th></tr></thead><tbody id="cBody"></tbody></table>
-    </div>
-    <div id="cFooter" class="tbl-footer"></div>
-  </div>
-
-  <div id="sub-notable" class="sub-pane">
-    <div class="sec-title">Enterprise &amp; AI infrastructure leaders</div>
-    <div class="notable-grid" id="notableEnterprise"></div>
-    <div class="sec-title">Academic &amp; research</div>
-    <div class="notable-grid" id="notableAcad"></div>
-    <div class="sec-title">Venture &amp; founders</div>
-    <div class="notable-grid" id="notableVC"></div>
-  </div>
-
-  <div id="sub-campaigns" class="sub-pane">
-    <div class="info-box"><b>3 related campaigns</b> found. The primary email campaign drove all 9,548 influenced contacts. The On-Demand follow-up runs through Jun 30 — the main re-engagement window.</div>
-    <div class="campaign-card primary"><div><div class="campaign-name">[Webinar] Linux Foundation | SemiAnalysis Co-host | 2026-04</div><div class="campaign-meta">ID 755531092717 · Started Apr 21 · <b>9,548 influenced contacts</b></div></div><span class="badge b-att">Primary campaign</span></div>
-    <div class="campaign-card"><div><div class="campaign-name">[Webinar] Linux Foundation | SemiAnalysis Co-host | Attendees</div><div class="campaign-meta">ID 759272159957 · Apr 23 only · attendee nurture sequence</div></div><span class="badge b-mql">Attendee nurture</span></div>
-    <div class="campaign-card"><div><div class="campaign-name">[Webinar] Linux Foundation | SemiAnalysis Co-host | On-Demand</div><div class="campaign-meta">ID 759270714062 · Apr 23 – Jun 30 2026 · still active</div></div><span class="badge b-sqo">On-demand follow-up</span></div>
-  </div>
+  </span>
 </div>
 
-
-<!-- TAB 2 -->
-<div id="tab-targets" class="tab-pane">
-  <div class="page-title">On-demand re-engagement targets</div>
-  <div class="page-sub">Scored from 9,548 influenced contacts · ranked by lifecycle stage, email opens, clicks &amp; send fatigue</div>
-
-  <div class="kpi-grid">
-    <div class="kpi"><div class="kpi-label">Tier 1 — hot</div><div class="kpi-value">8</div><div class="kpi-sub">opened or clicked · SAL+</div></div>
-    <div class="kpi"><div class="kpi-label">Tier 2 — warm</div><div class="kpi-value">14</div><div class="kpi-sub">SAL/SQO · no open yet</div></div>
-    <div class="kpi"><div class="kpi-label">Tier 3 — nurture</div><div class="kpi-value">22</div><div class="kpi-sub">MQL/Lead · good ICP fit</div></div>
-    <div class="kpi"><div class="kpi-label">Suppress</div><div class="kpi-value">6</div><div class="kpi-sub">8+ sends, zero signal</div></div>
-  </div>
-
-  <div class="filter-bar">
-    <input id="tSearch" placeholder="Search name or company…" oninput="renderTargets()">
-    <select id="tTier" onchange="renderTargets()"><option value="">All tiers</option><option value="1">Tier 1 — hot</option><option value="2">Tier 2 — warm</option><option value="3">Tier 3 — nurture</option><option value="4">Suppress</option></select>
-    <select id="tStage" onchange="renderTargets()"><option value="">All stages</option><option value="sqo">SQO</option><option value="sal">SAL</option><option value="mql">MQL</option><option value="lead">Lead</option></select>
-  </div>
-
-  <div id="targetWrap"></div>
-
-  <div class="sec-title" style="margin-top:28px">Recommended on-demand messaging by tier</div>
-  <div class="action-grid">
-    <div class="action-card"><div class="action-tier" style="color:#3C3489">Tier 1 — hot</div><div class="action-msg">Direct 1:1 from AE. Reference the email they opened/clicked. Share on-demand link + calendar slot. SDR follow-up within 48 hrs.</div></div>
-    <div class="action-card"><div class="action-tier" style="color:#085041">Tier 2 — warm</div><div class="action-msg">Personalised on-demand invite. Reference their company's infra stack. CTA is the recording, not a meeting. Follow-up on 50%+ watch time.</div></div>
-    <div class="action-card"><div class="action-tier" style="color:#185FA5">Tier 3 — nurture</div><div class="action-msg">Automated on-demand sequence, 2 emails max. Lead with Linux Foundation + SemiAnalysis co-brand credibility. Upgrade to Tier 2 on any open.</div></div>
-    <div class="action-card"><div class="action-tier" style="color:#791F1F">Suppress</div><div class="action-msg">Remove from on-demand campaign now. 8–11 sends, zero engagement risks domain reputation. Re-evaluate Q3 with a fresh angle.</div></div>
-  </div>
-  <div class="suppress-box"><b>Suppress immediately:</b> Shashi Menon (Schlumberger, 11 sends) · Tiffany Wang (Red Mountain, 10) · Chase Walker (Spotify, 7) · Jonathan Weinberg (Galaxy Digital, 7) · Rebekah Roberts (CIQ, 7) · Cooper Rood (Vantage Plastics, 7). Continued sends risk spam classification and deliverability damage across the full DB.</div>
 </div>
-
 
 <script>
-const STAGE_CONFIG=[
-  {key:"lead",    label:"Lead",    color:"#378ADD",dbCount:3820,regCount:22},
-  {key:"mql",     label:"MQL",     color:"#639922",dbCount:1240,regCount:18},
-  {key:"sal",     label:"SAL/MEL", color:"#EF9F27",dbCount:2190,regCount:45},
-  {key:"sqo",     label:"SQO",     color:"#7F77DD",dbCount:520, regCount:16},
-  {key:"customer",label:"Customer",color:"#1D9E75",dbCount:180, regCount:8},
-  {key:"other",   label:"Other",   color:"#888780",dbCount:151, regCount:5},
+const REPO_OWNER = 'sanjeevchris77';
+const REPO_NAME = 'clockwork-sfdc-sync-aiinfra26';
+const REPO_BRANCH = 'main';
+const RAW_BASE = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${REPO_BRANCH}/`;
+const REPORT_2025_ID = '00OTV00000RZK4O2AX';
+
+const charts = {};
+
+function toggleInfoPopover(id) {
+  const el = document.getElementById(id);
+  el.style.display = (el.style.display === 'none' || !el.style.display) ? 'block' : 'none';
+}
+
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function fmtMoney(n) {
+  n = Number(n) || 0;
+  return '$' + n.toLocaleString('en-US');
+}
+
+async function fetchJson(path) {
+  const res = await fetch(RAW_BASE + path, { cache: 'no-store' });
+  if (!res.ok) throw new Error(path + ': HTTP ' + res.status);
+  return res.json();
+}
+
+// Heuristic GTM persona classifier from job title keywords -- not a
+// Salesforce field, a starting point only (see Methodology).
+const PERSONA_RULES = [
+  [/\b(ceo|cto|cfo|coo|founder|chief|president|vp|vice president|svp|evp)\b/i, 'Executive'],
+  [/\b(engineer|engineering|developer|swe|architect|infra|infrastructure|sre|devops|platform)\b/i, 'Engineering / Infra'],
+  [/\b(data scien|machine learning|\bml\b|\bai\b|research)\b/i, 'Data / AI / ML'],
+  [/\b(product|pm\b|program manager)\b/i, 'Product'],
+  [/\b(sales|account exec|\bae\b|business development|\bbd\b|partnership)\b/i, 'Sales / BD'],
+  [/\b(marketing|growth|demand gen|brand)\b/i, 'Marketing'],
+  [/\b(procurement|finance|legal|operations|ops\b)\b/i, 'Ops / Finance'],
 ];
-const CONTACTS=[
-  {name:"Liz Li",company:"AMD",title:"Principal AI Engineer",stage:"sal",cohort:"ai-infra",webinar:"attended"},
-  {name:"Parul Singh",company:"Red Hat",title:"Principal Software Eng.",stage:"lead",cohort:"practitioner",webinar:"attended"},
-  {name:"Christin Pohl",company:"Microsoft",title:"Global BB AI Infra Eng.",stage:"sal",cohort:"ai-infra",webinar:"attended"},
-  {name:"Michał Gallus",company:"AMD",title:"SMTS Software Dev Eng.",stage:"lead",cohort:"ai-infra",webinar:"registered"},
-  {name:"Shailen Sobhee",company:"AMD",title:"Sr Product Mktg Mgr",stage:"sal",cohort:"ai-infra",webinar:"attended"},
-  {name:"Ayoub Bih",company:"BrainChip",title:"Software Engineer",stage:"sal",cohort:"ai-infra",webinar:"attended"},
-  {name:"Fares Ernez",company:"BrainChip",title:"Software Engineer",stage:"sal",cohort:"ai-infra",webinar:"attended"},
-  {name:"Pedro Almada",company:"Semidynamics",title:"Software Team Director",stage:"sal",cohort:"ai-infra",webinar:"attended"},
-  {name:"Joaquin Aliaga",company:"Semidynamics",title:"Senior Software Eng.",stage:"lead",cohort:"ai-infra",webinar:"registered"},
-  {name:"Bachir Djermani",company:"PhysicsX",title:"ML Eng. Research",stage:"lead",cohort:"ai-infra",webinar:"registered"},
-  {name:"Sagar Pal",company:"Entalpic",title:"Senior ML & HPC Eng.",stage:"sal",cohort:"ai-infra",webinar:"attended"},
-  {name:"Hannah Bull",company:"Entalpic",title:"ML Engineer",stage:"lead",cohort:"ai-infra",webinar:"registered"},
-  {name:"Mehdi Amini",company:"NVIDIA",title:"Software Engineer",stage:"sal",cohort:"ai-infra",webinar:"registered"},
-  {name:"Andrew Wang",company:"Blur Labs",title:"CTO & Co-founder",stage:"lead",cohort:"ai-infra",webinar:"attended"},
-  {name:"Doğukan Veziroğlu",company:"Kairu",title:"CTO",stage:"lead",cohort:"ai-infra",webinar:"attended"},
-  {name:"Ahmed Amine Dirhoussi",company:"Hugging Face",title:"ML Engineer",stage:"lead",cohort:"ai-infra",webinar:"registered"},
-  {name:"Eric Bezzam",company:"Hugging Face",title:"Audio ML Engineer",stage:"lead",cohort:"ai-infra",webinar:"registered"},
-  {name:"Abhinav Srivastav",company:"TraceOpt",title:"Founder",stage:"sqo",cohort:"ai-infra",webinar:"attended"},
-  {name:"Oumaima Boulaares",company:"NXP Semi",title:"Software Engineer",stage:"sal",cohort:"ai-infra",webinar:"registered"},
-  {name:"Andrey Shedko",company:"Amazon",title:"SDE II",stage:"sal",cohort:"practitioner",webinar:"registered"},
-  {name:"Keshav Singh",company:"Oracle",title:"ML Engineer",stage:"sal",cohort:"practitioner",webinar:"registered"},
-  {name:"Sofiene Alouini",company:"Doctrine",title:"ML Engineer",stage:"sal",cohort:"practitioner",webinar:"registered"},
-  {name:"ValéRian Rey",company:"Simplex Lab",title:"Research Engineer",stage:"sal",cohort:"practitioner",webinar:"registered"},
-  {name:"Witalis Domitrz",company:"Jane Street",title:"Quant Researcher",stage:"sal",cohort:"practitioner",webinar:"registered"},
-  {name:"Jenna Maccarley",company:"CZ Biohub",title:"Staff ML Engineer",stage:"sal",cohort:"practitioner",webinar:"registered"},
-  {name:"Aram Dovlatyan",company:"YerevaNN",title:"Research Engineer",stage:"lead",cohort:"practitioner",webinar:"registered"},
-  {name:"Xuan Nguyen",company:"Safran",title:"PhD Student",stage:"lead",cohort:"practitioner",webinar:"registered"},
-  {name:"Stephan Graf",company:"Jülich SC",title:"Computer Scientist",stage:"mql",cohort:"ai-infra",webinar:"attended"},
-  {name:"Simran Kaur",company:"Capital One",title:"Distinguished Eng./Dir.",stage:"mql",cohort:"ai-infra",webinar:"attended"},
-  {name:"Fred Bean",company:"Capital One",title:"IT Dir./Distinguished Eng.",stage:"mql",cohort:"ai-infra",webinar:"attended"},
-  {name:"Sibish Basheer",company:"American Express",title:"Sr Staff Eng. Conv. AI",stage:"mql",cohort:"ai-infra",webinar:"attended"},
-  {name:"Rakesh Jain",company:"IBM",title:"Sr TS / Data Platform AI",stage:"mql",cohort:"ai-infra",webinar:"attended"},
-  {name:"Falk Steinbrueck",company:"IBM",title:"Director AI, IBM Z/Linux",stage:"mql",cohort:"ai-infra",webinar:"attended"},
-  {name:"Donald Hoover",company:"Capital One",title:"Sr PM ML Platform",stage:"mql",cohort:"ai-infra",webinar:"registered"},
-  {name:"Justin Liao",company:"Citi",title:"SVP Infra / Global HPC",stage:"mql",cohort:"ai-infra",webinar:"registered"},
-  {name:"Ivan Girotto",company:"ICTP",title:"Director",stage:"mql",cohort:"ai-infra",webinar:"registered"},
-  {name:"Daniel Morgan",company:"Citi",title:"ML Engineering Mgr",stage:"mql",cohort:"ai-infra",webinar:"registered"},
-  {name:"Alberto Romero",company:"Citi",title:"Dir. Gen AI Platform Eng.",stage:"mql",cohort:"ai-infra",webinar:"registered"},
-  {name:"Prasanna Redroutu",company:"Franklin Templeton",title:"Dir. Digital & AI/ML Eng.",stage:"mql",cohort:"ai-infra",webinar:"registered"},
-  {name:"Bill Abbott",company:"Rutgers University",title:"Systems Administrator",stage:"sqo",cohort:"ai-infra",webinar:"attended"},
-  {name:"Edison Tang",company:"Porsche Engineering",title:"HPC Senior Engineer",stage:"sqo",cohort:"ai-infra",webinar:"attended"},
-  {name:"Stefan Krieg",company:"Jülich SC",title:"Head HPC Quantum Systems",stage:"sqo",cohort:"ai-infra",webinar:"attended"},
-  {name:"Narayana Adapa",company:"FedEx",title:"Global Dir. IT Reliability",stage:"sal",cohort:"ai-infra",webinar:"attended"},
-  {name:"Bryan Shores",company:"Salesforce",title:"Dir. Engineering & SRE",stage:"sal",cohort:"ai-infra",webinar:"attended"},
-  {name:"Milind Naphade",company:"Capital One",title:"SVP Technology AI Found.",stage:"sqo",cohort:"ai-infra",webinar:"attended"},
-  {name:"Abhijit Bose",company:"Capital One",title:"SVP Head Enterprise ML",stage:"sal",cohort:"ai-infra",webinar:"registered"},
-  {name:"Ali Rodell",company:"Capital One",title:"Sr Director ML",stage:"sal",cohort:"ai-infra",webinar:"registered"},
-  {name:"Syed Dilawar Ali Rizvi",company:"Oracle",title:"—",stage:"customer",cohort:"ai-infra",webinar:"attended"},
-  {name:"Masud Khandker",company:"Oracle",title:"—",stage:"customer",cohort:"ai-infra",webinar:"attended"},
-];
-const TARGETS=[
-  {rank:1,tier:1,name:"Assaf Pazner",co:"Eagle Seven",title:"Director, Software Dev.",stage:"sal",sends:0,signal:"click",score:98,hsid:"108214220507"},
-  {rank:2,tier:1,name:"Mattan Erez",co:"UT Austin",title:"Professor",stage:"lead",sends:0,signal:"open",score:91,hsid:"335390240477"},
-  {rank:3,tier:1,name:"Mayra Zavala",co:"Sovereign Data Centers",title:"Data Platforms",stage:"sqo",sends:1,signal:"open",score:89,hsid:"457894995694"},
-  {rank:4,tier:1,name:"Jeff DeReus",co:"University of Iowa",title:"Sr. Systems Admin",stage:"sqo",sends:2,signal:"open",score:85,hsid:"335173910215"},
-  {rank:5,tier:1,name:"Madhu Behera",co:"Emory University",title:"Chief Research Officer",stage:"lead",sends:5,signal:"open",score:82,hsid:"108327211758"},
-  {rank:6,tier:1,name:"Nidhi Chappell",co:"Microsoft",title:"VP Azure AI",stage:"sal",sends:5,signal:"open",score:80,hsid:"108578005713"},
-  {rank:7,tier:1,name:"Ryan Cook",co:"TensorWave",title:"Data Center Architect",stage:"sal",sends:2,signal:"open",score:78,hsid:"108562987759"},
-  {rank:8,tier:1,name:"Siyu Song",co:"PayPal",title:"ML Eng. Manager",stage:"lead",sends:1,signal:"open",score:75,hsid:"138066531027"},
-  {rank:9,tier:2,name:"Matt Garman",co:"Amazon Web Services",title:"CEO",stage:"lead",sends:3,signal:"cold",score:72,hsid:"461526623969"},
-  {rank:10,tier:2,name:"Lin Qiao",co:"Fireworks AI",title:"CEO & Co-founder",stage:"sal",sends:0,signal:"cold",score:71,hsid:"108327214814"},
-  {rank:11,tier:2,name:"Mohsin Jaffar",co:"Citi",title:"VP Architect, HPC",stage:"sal",sends:3,signal:"cold",score:70,hsid:"108327212766"},
-  {rank:12,tier:2,name:"Matthew Chan",co:"Crypto.com",title:"CTO",stage:"sal",sends:3,signal:"cold",score:69,hsid:"108588019446"},
-  {rank:13,tier:2,name:"Chris Galloway",co:"ORI",title:"CTO",stage:"sal",sends:3,signal:"cold",score:68,hsid:"108588010211"},
-  {rank:14,tier:2,name:"Chinmay Barve",co:"Mixpanel",title:"VP Engineering",stage:"sal",sends:0,signal:"cold",score:67,hsid:"108526947059"},
-  {rank:15,tier:2,name:"Jeremy Truelove",co:"Instacart",title:"Dir. Cloud & Storage",stage:"sal",sends:6,signal:"cold",score:65,hsid:"108562986712"},
-  {rank:16,tier:2,name:"Anuj Bhatnagar",co:"Verizon",title:"Assoc. Dir. SRE",stage:"sal",sends:3,signal:"cold",score:64,hsid:"108588007161"},
-  {rank:17,tier:2,name:"James Mcclay",co:"Vultr",title:"Network Software Eng.",stage:"sal",sends:1,signal:"cold",score:63,hsid:"108562988737"},
-  {rank:18,tier:2,name:"Fan Fan",co:"Ayar Labs / Intel",title:"SAL In Progress",stage:"sal",sends:3,signal:"cold",score:62,hsid:"335138667233"},
-  {rank:19,tier:2,name:"Matt Lai",co:"SanDisk Technologies",title:"—",stage:"sal",sends:4,signal:"cold",score:60,hsid:"335169651429"},
-  {rank:20,tier:2,name:"Jeanina Awni",co:"AIC Inc.",title:"—",stage:"sal",sends:3,signal:"cold",score:59,hsid:"335177506520"},
-  {rank:21,tier:2,name:"Jake Scaltreto",co:"Circle",title:"Sr. Staff SRE",stage:"sal",sends:3,signal:"cold",score:58,hsid:"108327214784"},
-  {rank:22,tier:2,name:"Robert Atchley",co:"First United Bank",title:"AVP & SRE",stage:"sal",sends:3,signal:"cold",score:57,hsid:"108564776658"},
-  {rank:23,tier:3,name:"Darshan Shah",co:"Guardian Life",title:"Head ML Engineering",stage:"mql",sends:4,signal:"cold",score:54,hsid:"171837963994"},
-  {rank:24,tier:3,name:"Kristian Lindwall",co:"Spotify",title:"Dir. Engineering ML Infra",stage:"lead",sends:4,signal:"cold",score:53,hsid:"142992255678"},
-  {rank:25,tier:3,name:"Yas Khaled",co:"Dell Technologies",title:"Data Platforms Canada",stage:"lead",sends:6,signal:"cold",score:52,hsid:"335398533861"},
-  {rank:26,tier:3,name:"Yuxi S.",co:"Lepton AI",title:"Site Reliability Eng.",stage:"sal",sends:0,signal:"cold",score:51,hsid:"108588020423"},
-  {rank:27,tier:3,name:"Eyal Hezi",co:"DriveNets",title:"Sr. Solution Eng. AI/HPC",stage:"sqo",sends:4,signal:"cold",score:50,hsid:"335137528567"},
-  {rank:28,tier:3,name:"Soumya Das Bhaumik",co:"GarbleCloud",title:"Product Advisor",stage:"sqo",sends:4,signal:"cold",score:49,hsid:"425002971862"},
-  {rank:29,tier:3,name:"Sergey Belov",co:"Cisco",title:"Director SRE",stage:"lead",sends:1,signal:"cold",score:48,hsid:"108495379153"},
-  {rank:30,tier:3,name:"Ryan Heffernan",co:"NVIDIA",title:"Sr. SRE",stage:"lead",sends:2,signal:"cold",score:47,hsid:"108526944964"},
-  {rank:31,tier:3,name:"Rory Harness",co:"Podium",title:"Sr. SRE",stage:"sal",sends:3,signal:"cold",score:46,hsid:"108588018403"},
-  {rank:32,tier:3,name:"Jason Miller",co:"PNC Financial",title:"VP SRE Manager",stage:"lead",sends:3,signal:"cold",score:45,hsid:"108562983649"},
-  {rank:33,tier:3,name:"Nasir Khattak",co:"Raymond James",title:"Sr. VP Tech Delivery",stage:"lead",sends:3,signal:"cold",score:44,hsid:"108214215408"},
-  {rank:34,tier:3,name:"Jason Schollenberger",co:"Akamai Technologies",title:"Dir. SRE",stage:"lead",sends:0,signal:"cold",score:43,hsid:"108588014326"},
-  {rank:35,tier:3,name:"Suzanne Webb O'Connor",co:"Principal Financial",title:"Asst Dir. Ethical AI",stage:"lead",sends:5,signal:"cold",score:40,hsid:"180853254885"},
-  {rank:36,tier:3,name:"Marco Espericueta",co:"Austin Energy",title:"CIO",stage:"lead",sends:3,signal:"cold",score:37,hsid:"108583800516"},
-  {rank:37,tier:3,name:"Aashish Kumar",co:"Plus Wealth",title:"Sr. Network Engineer",stage:"sal",sends:1,signal:"cold",score:38,hsid:"108564776648"},
-  {rank:38,tier:3,name:"Yuming Chen",co:"MassMutual",title:"—",stage:"lead",sends:2,signal:"cold",score:39,hsid:"108329044727"},
-  {rank:39,tier:3,name:"Michael Potts",co:"Sapu Bioscience",title:"VP Data Science",stage:"lead",sends:6,signal:"cold",score:33,hsid:"108495382236"},
-  {rank:40,tier:3,name:"Hassan Mubiru",co:"Uganda Civil Aviation",title:"Principal Network Admin",stage:"lead",sends:2,signal:"cold",score:32,hsid:"108329040595"},
-  {rank:41,tier:4,name:"Shashi Menon",co:"Schlumberger",title:"VP Digital",stage:"lead",sends:11,signal:"warn",score:0,hsid:"108578004705"},
-  {rank:42,tier:4,name:"Tiffany Wang",co:"Red Mountain",title:"CEO",stage:"mql",sends:10,signal:"warn",score:0,hsid:"108588017380"},
-  {rank:43,tier:4,name:"Chase Walker",co:"Spotify",title:"ML Eng. Mgr, AdML",stage:"lead",sends:7,signal:"warn",score:0,hsid:"137997687509"},
-  {rank:44,tier:4,name:"Jonathan Weinberg",co:"Galaxy Digital",title:"VP Blockchain Infra",stage:"sal",sends:7,signal:"warn",score:0,hsid:"108319576819"},
-  {rank:45,tier:4,name:"Rebekah Roberts",co:"CIQ",title:"—",stage:"sal",sends:7,signal:"warn",score:0,hsid:"335163294449"},
-  {rank:46,tier:4,name:"Cooper Rood",co:"Vantage Plastics",title:"AI Developer",stage:"lead",sends:7,signal:"warn",score:0,hsid:"108495380208"},
-];
-const NOTABLE_ENTERPRISE=[
-  {name:"Matt Garman",co:"Amazon Web Services",title:"CEO",initials:"MG"},
-  {name:"Lin Qiao",co:"Fireworks AI",title:"CEO & Co-founder",initials:"LQ"},
-  {name:"Nidhi Chappell",co:"Microsoft",title:"VP Azure AI",initials:"NC"},
-  {name:"Mohsin Jaffar",co:"Citi",title:"VP Architect, HPC",initials:"MJ"},
-  {name:"Milind Naphade",co:"Capital One",title:"SVP Technology AI Foundations",initials:"MN"},
-  {name:"Abhijit Bose",co:"Capital One",title:"SVP Head Enterprise ML/AI",initials:"AB"},
-  {name:"Falk Steinbrueck",co:"IBM",title:"Director AI, IBM Z & LinuxONE",initials:"FS"},
-  {name:"Kristian Lindwall",co:"Spotify",title:"Director Engineering, ML Infra",initials:"KL"},
-  {name:"Darshan Shah",co:"Guardian Life",title:"Head ML & Data Engineering",initials:"DS"},
-  {name:"Jeremy Truelove",co:"Instacart",title:"Dir. Cloud, Edge & Storage Eng.",initials:"JT"},
-  {name:"Narayana Adapa",co:"FedEx",title:"Global Director IT Reliability",initials:"NA"},
-  {name:"Bryan Shores",co:"Salesforce",title:"Director, Engineering & SRE",initials:"BS"},
-];
-const NOTABLE_ACAD=[
-  {name:"Mattan Erez",co:"UT Austin",title:"Professor · opened Apr 22",initials:"ME"},
-  {name:"Madhu Behera",co:"Emory University",title:"Chief Research Officer",initials:"MB"},
-  {name:"Ivan Girotto",co:"ICTP",title:"Director",initials:"IG"},
-  {name:"Jan Martinovic",co:"IT4Innovations SC",title:"Head Advanced Data Analysis Lab",initials:"JM"},
-  {name:"Stefan Krieg",co:"Jülich SC",title:"Head HPC for Quantum Systems",initials:"SK"},
-  {name:"Stephan Graf",co:"Jülich SC",title:"Computer Scientist",initials:"SG"},
-];
-const NOTABLE_VC=[
-  {name:"Abhinav Srivastav",co:"TraceOpt",title:"Founder · SQO stage",initials:"AS"},
-  {name:"Andrew Wang",co:"Blur Labs",title:"CTO & Co-founder",initials:"AW"},
-  {name:"Doğukan Veziroğlu",co:"Kairu",title:"CTO",initials:"DV"},
-  {name:"Shaun Maguire",co:"Sequoia Capital",title:"General Partner",initials:"SM"},
-  {name:"Tilden Chao",co:"Generation IM",title:"Growth Equity",initials:"TC"},
-];
-const TIER_META={
-  1:{label:"Tier 1 — hot",   bg:"#EEEDFE",color:"#3C3489",why:"Opened or clicked · prioritise for immediate SDR outreach"},
-  2:{label:"Tier 2 — warm",  bg:"#E1F5EE",color:"#085041",why:"SAL/SQO stage · high ICP fit · no email signal yet"},
-  3:{label:"Tier 3 — nurture",bg:"#E6F1FB",color:"#0C447C",why:"MQL/Lead · good company fit · automated 2-email sequence"},
-  4:{label:"Suppress",        bg:"#FCEBEB",color:"#791F1F",why:"8+ sends, zero opens — remove from on-demand now"},
+function classifyPersona(title) {
+  if (!title) return 'Unknown';
+  for (const [re, label] of PERSONA_RULES) {
+    if (re.test(title)) return label;
+  }
+  return 'Other';
+}
+
+function countBy(rows, fn) {
+  const m = {};
+  rows.forEach(r => { const v = fn(r) || 'Unknown'; m[v] = (m[v] || 0) + 1; });
+  return m;
+}
+
+const PALETTE = ['#abbed9','#d1cae7','#83b7a4','#ccb886','#e1bbbb','#7dd3fc','#f0abfc','#86efac','#fcd34d','#fca5a5'];
+
+const FUNNEL_ROW_COLORS = {
+  'Leads': '#3b4252',
+  'Marketing Engaged Lead': '#3a4a63',
+  'Marketing Qualified Lead': '#2c5c7a',
+  'Sales Accepted Lead': '#1f6f5c',
+  'Sales Qualified Lead': '#1a7a4f',
 };
-
-function stageBadge(s){const m={lead:"b-lead",mql:"b-mql",sal:"b-sal",sqo:"b-sqo",customer:"b-cust",other:"b-rem"};return m[s]||"b-rem";}
-function stageLabel(s){const m={lead:"Lead",mql:"MQL",sal:"SAL",sqo:"SQO",customer:"Cust.",other:"Other"};return m[s]||s;}
-function signalBadge(s){if(s==="click")return'<span class="signal sig-click">clicked</span>';if(s==="open")return'<span class="signal sig-open">opened</span>';if(s==="warn")return'<span class="signal sig-warn">suppress</span>';return'<span class="signal sig-cold">no signal</span>';}
-
-function switchTab(id,el){document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));document.getElementById('tab-'+id).classList.add('active');el.classList.add('active');}
-function switchSub(id,el){const p=el.closest('.tab-pane');p.querySelectorAll('.sub-pane').forEach(x=>x.classList.remove('active'));el.closest('.sub-nav').querySelectorAll('.sub-btn').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');el.classList.add('active');}
-
-function buildFunnelDB(){const total=8101;document.getElementById('funnelDB').innerHTML=STAGE_CONFIG.map(s=>`<div class="funnel-row"><span class="funnel-lbl">${s.label}</span><div class="funnel-track"><div class="funnel-fill" style="width:${Math.round(s.dbCount/total*100)}%;background:${s.color}"></div></div><span class="funnel-n" style="color:${s.color}">${s.dbCount.toLocaleString()}</span><span class="funnel-pct">${Math.round(s.dbCount/total*100)}%</span></div>`).join('');}
-
-function buildCharts(){
-  new Chart(document.getElementById('regChart'),{type:'bar',data:{labels:STAGE_CONFIG.map(s=>s.label),datasets:[{label:'Registrants',data:STAGE_CONFIG.map(s=>s.regCount),backgroundColor:STAGE_CONFIG.map(s=>s.color),borderRadius:4,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{color:'#aaa',stepSize:5},grid:{color:'rgba(0,0,0,0.05)'}},x:{ticks:{color:'#888'},grid:{display:false}}}}});
-  new Chart(document.getElementById('attendChart'),{type:'doughnut',data:{labels:['Attended (~47)','Reg. only (67)','Not reg. (7,987)'],datasets:[{data:[47,67,7987],backgroundColor:['#1D9E75','#378ADD','#E8E7E2'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},cutout:'62%'}});
-  const aiN=CONTACTS.filter(c=>c.cohort==='ai-infra').length,prN=CONTACTS.filter(c=>c.cohort==='practitioner').length;
-  new Chart(document.getElementById('cohortChart'),{type:'pie',data:{labels:[`AI Infra (${aiN})`,`Practitioner (${prN})`],datasets:[{data:[aiN,prN],backgroundColor:['#7F77DD','#639922'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}});
-  const counts={};CONTACTS.forEach(c=>{counts[c.company]=(counts[c.company]||0)+1;});
-  const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,14);
-  document.getElementById('compChart').parentElement.style.height=(sorted.length*40+80)+'px';
-  new Chart(document.getElementById('compChart'),{type:'bar',data:{labels:sorted.map(x=>x[0]),datasets:[{label:'Contacts',data:sorted.map(x=>x[1]),backgroundColor:'#378ADD',borderRadius:3,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#aaa',stepSize:1},grid:{color:'rgba(0,0,0,0.05)'}},y:{ticks:{color:'#555'},grid:{display:false}}}}});
+function funnelColorFor(stage) {
+  return FUNNEL_ROW_COLORS[stage] || '#3b4252';
 }
 
-function buildCohortCards(){
-  const ai=CONTACTS.filter(c=>c.cohort==='ai-infra'),pr=CONTACTS.filter(c=>c.cohort==='practitioner');
-  const aiAtt=ai.filter(c=>c.webinar==='attended').length,prAtt=pr.filter(c=>c.webinar==='attended').length;
-  const mqlPlus=CONTACTS.filter(c=>['mql','sal','sqo','customer'].includes(c.stage)).length;
-  const acad=CONTACTS.filter(c=>['University Of Genoa','Univ. of Amsterdam','CNRS','KIT','ICTP','Jülich SC','IT4Innovations SC','YerevaNN'].includes(c.company)).length;
-  document.getElementById('cohortCards').innerHTML=`
-    <div class="cohort-card"><div class="cohort-label">AI Infrastructure</div><div class="cohort-val">${ai.length}</div><div class="cohort-sub">${aiAtt} attended · ${Math.round(aiAtt/ai.length*100)}% show rate</div><div class="cohort-prog"><div class="cohort-prog-fill" style="width:${Math.round(aiAtt/ai.length*100)}%;background:#7F77DD"></div></div></div>
-    <div class="cohort-card"><div class="cohort-label">Practitioners</div><div class="cohort-val">${pr.length}</div><div class="cohort-sub">${prAtt} attended · ${Math.round(prAtt/pr.length*100)}% show rate</div><div class="cohort-prog"><div class="cohort-prog-fill" style="width:${Math.round(prAtt/pr.length*100)}%;background:#639922"></div></div></div>
-    <div class="cohort-card"><div class="cohort-label">Enterprise buyers</div><div class="cohort-val">${mqlPlus}</div><div class="cohort-sub">MQL+ stage · Capital One, IBM, Citi…</div><div class="cohort-prog"><div class="cohort-prog-fill" style="width:72%;background:#1D9E75"></div></div></div>
-    <div class="cohort-card"><div class="cohort-label">Academic / OSS</div><div class="cohort-val">${acad}</div><div class="cohort-sub">universities, national labs, research</div><div class="cohort-prog"><div class="cohort-prog-fill" style="width:28%;background:#378ADD"></div></div></div>`;
-}
-
-function filterContacts(){
-  const q=document.getElementById('cSearch').value.toLowerCase(),st=document.getElementById('cStage').value,wb=document.getElementById('cWebinar').value,co=document.getElementById('cCohort').value;
-  const filtered=CONTACTS.filter(c=>{if(q&&!(c.name+c.company+c.title).toLowerCase().includes(q))return false;if(st&&c.stage!==st)return false;if(wb&&c.webinar!==wb)return false;if(co&&c.cohort!==co)return false;return true;});
-  document.getElementById('cBody').innerHTML=filtered.slice(0,60).map(c=>`<tr><td title="${c.name}">${c.name}</td><td title="${c.company}">${c.company}</td><td title="${c.title}">${c.title}</td><td><span class="badge ${stageBadge(c.stage)}">${stageLabel(c.stage)}</span></td><td><span class="badge ${c.cohort==='ai-infra'?'b-ai':'b-prac'}">${c.cohort==='ai-infra'?'AI Infra':'Practitioner'}</span></td><td><span class="badge ${c.webinar==='attended'?'b-att':'b-reg'}">${c.webinar==='attended'?'Attended':'Registered'}</span></td></tr>`).join('');
-  document.getElementById('cFooter').textContent=`Showing ${Math.min(60,filtered.length)} of ${filtered.length} contacts`;
-}
-
-function buildNotable(id,data){document.getElementById(id).innerHTML=data.map(n=>`<div class="notable-card"><div class="avatar">${n.initials}</div><div><div class="notable-name">${n.name}</div><div class="notable-title">${n.title}</div><div class="notable-co">${n.co}</div></div></div>`).join('');}
-
-function renderTargets(){
-  const q=document.getElementById('tSearch').value.toLowerCase(),tf=document.getElementById('tTier').value,sf=document.getElementById('tStage').value;
-  const data=TARGETS.filter(r=>{if(q&&!(r.name+r.co).toLowerCase().includes(q))return false;if(tf&&r.tier!==parseInt(tf))return false;if(sf&&r.stage!==sf)return false;return true;});
-  const tiers=[1,2,3,4].filter(t=>!tf||t===parseInt(tf));
-  let html='';
-  tiers.forEach(t=>{
-    const rows=data.filter(r=>r.tier===t);if(!rows.length)return;
-    const m=TIER_META[t];
-    html+=`<div class="tier-header"><span class="tier-pill" style="background:${m.bg};color:${m.color}">${m.label}</span><span class="tier-count">${rows.length} contacts</span><span class="tier-why">${m.why}</span></div>
-    <div class="tbl-wrap" style="margin-bottom:6px"><table><thead><tr><th style="width:26px">#</th><th style="width:130px">Name</th><th style="width:140px">Company</th><th style="width:150px">Title</th><th style="width:58px">Stage</th><th style="width:68px">Signal</th><th style="width:42px">Sends</th><th style="width:88px">Score</th><th style="width:52px">HubSpot</th></tr></thead><tbody>
-    ${rows.map(r=>`<tr><td style="color:#ccc;font-size:11px">${r.rank}</td><td title="${r.name}">${r.name}</td><td title="${r.co}">${r.co}</td><td title="${r.title}">${r.title}</td><td><span class="badge ${stageBadge(r.stage)}">${stageLabel(r.stage)}</span></td><td>${signalBadge(r.signal)}</td><td style="color:${r.sends>=8?'#A32D2D':r.sends>=5?'#854F0B':'#555'};font-weight:${r.sends>=5?500:400}">${r.sends}</td><td>${r.tier===4?'<span style="font-size:11px;color:#ccc">—</span>':`<div class="score-bar"><div class="sbar" style="width:${Math.round(r.score*.52)}px;background:${m.color}"></div><span class="score-n" style="color:${m.color}">${r.score}</span></div>`}</td><td><a class="hs-link" href="https://app-na2.hubspot.com/contacts/242363872/contact/${r.hsid}" target="_blank">view ↗</a></td></tr>`).join('')}
-    </tbody></table></div>`;
+function renderFunnel(elId, stageCounts) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  const keys = Object.keys(stageCounts);
+  if (!keys.length) { el.innerHTML = '<div class="chart-empty">No leads yet.</div>'; return; }
+  const hasLeads = Object.prototype.hasOwnProperty.call(stageCounts, 'Leads');
+  const total = hasLeads ? stageCounts['Leads'] : Object.values(stageCounts).reduce((a,b) => a+b, 0);
+  const order = keys.slice().sort((a,b) => stageCounts[b] - stageCounts[a]);
+  const maxCount = Math.max(...order.map(k => stageCounts[k]));
+  el.innerHTML = '';
+  order.forEach(stage => {
+    const count = stageCounts[stage];
+    const pct = total ? Math.round((count / total) * 100) : 0;
+    const widthPct = maxCount ? Math.round(32 + (count / maxCount) * 60) : 32;
+    const row = document.createElement('div');
+    row.className = 'funnel-row';
+    row.style.width = widthPct + '%';
+    row.style.background = funnelColorFor(stage);
+    row.innerHTML = esc(stage) + ' <span class="funnel-count">' + count + '</span><span class="funnel-pct">(' + pct + '% of ' + total + ')</span>';
+    el.appendChild(row);
   });
-  document.getElementById('targetWrap').innerHTML=html;
 }
 
-document.addEventListener('DOMContentLoaded',()=>{buildFunnelDB();buildCharts();buildCohortCards();filterContacts();buildNotable('notableEnterprise',NOTABLE_ENTERPRISE);buildNotable('notableAcad',NOTABLE_ACAD);buildNotable('notableVC',NOTABLE_VC);renderTargets();});
+function renderPieChart(canvasId, counts) {
+  const ctx = document.getElementById(canvasId);
+  if (!ctx) return;
+  const labels = Object.keys(counts).sort((a,b) => counts[b]-counts[a]);
+  if (charts[canvasId]) charts[canvasId].destroy();
+  if (!labels.length) {
+    ctx.getContext('2d').clearRect(0,0,ctx.width,ctx.height);
+    ctx.parentElement.insertAdjacentHTML('beforeend', '<div class="chart-empty" data-for="' + canvasId + '">No data yet.</div>');
+    return;
+  }
+  charts[canvasId] = new Chart(ctx, {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data: labels.map(l => counts[l]), backgroundColor: labels.map((_,i)=>PALETTE[i % PALETTE.length]) }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: '#9aa2af', boxWidth: 10, font: { size: 9.5 } } } } }
+  });
+}
+
+function renderGroupedBarChart(canvasId, labels, datasets) {
+  const ctx = document.getElementById(canvasId);
+  if (!ctx) return;
+  if (charts[canvasId]) charts[canvasId].destroy();
+  if (!labels.length) {
+    ctx.parentElement.insertAdjacentHTML('beforeend', '<div class="chart-empty" data-for="' + canvasId + '">No data yet.</div>');
+    return;
+  }
+  charts[canvasId] = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets },
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: '#9aa2af', boxWidth: 10, font: { size: 9.5 } } } },
+      scales: { y: { beginAtZero: true, ticks: { color: '#9aa2af', precision: 0 }, grid: { color: '#23262d' } }, x: { ticks: { color: '#9aa2af' }, grid: { display: false } } } }
+  });
+}
+
+// Parses a Salesforce Reports REST API SUMMARY-format report into a simple
+// {total, byRep, byStatus} shape. Walks groupingsDown.groupings recursively
+// and looks up each group's count via factMap[<key>+'!T'].aggregates[0].value.
+function parseSalesforceSummaryReport(report) {
+  const fm = (report && report.factMap) || {};
+  const groupings = (report && report.groupingsDown && report.groupingsDown.groupings) || [];
+  const grandTotal = (fm['T!T'] && fm['T!T'].aggregates && fm['T!T'].aggregates[0] && fm['T!T'].aggregates[0].value) || 0;
+  const byRep = {};
+  const byStatus = {};
+  groupings.forEach(g => {
+    const repFact = fm[g.key + '!T'];
+    const repVal = (repFact && repFact.aggregates && repFact.aggregates[0] && repFact.aggregates[0].value) || 0;
+    byRep[g.label] = repVal;
+    (g.groupings || []).forEach(g2 => {
+      const statusFact = fm[g2.key + '!T'];
+      const statusVal = (statusFact && statusFact.aggregates && statusFact.aggregates[0] && statusFact.aggregates[0].value) || 0;
+      byStatus[g2.label] = (byStatus[g2.label] || 0) + statusVal;
+    });
+  });
+  return { total: grandTotal, byRep, byStatus };
+}
+
+function renderYoY(report2025, meta2026, byRep2026) {
+  const parsed = parseSalesforceSummaryReport(report2025);
+  const reps2026 = Object.fromEntries(Object.entries(byRep2026 || {}).map(([rep, d]) => [rep, ((d && d.leads) || []).length]));
+  const allReps = Array.from(new Set([...Object.keys(parsed.byRep), ...Object.keys(reps2026)]))
+    .sort((a, b) => ((parsed.byRep[b] || 0) + (reps2026[b] || 0)) - ((parsed.byRep[a] || 0) + (reps2026[a] || 0)));
+
+  const total2026 = meta2026.lead_count ?? 0;
+  const delta = total2026 - parsed.total;
+  const deltaPct = parsed.total ? (Math.round((delta / parsed.total) * 1000) / 10) + '%' : '—';
+  const statusEntries = Object.entries(parsed.byStatus).sort((a, b) => b[1] - a[1]);
+
+  const html = `
+    <h2 class="section">Year-over-Year: 2025 vs 2026 <button class="info-icon-btn" onclick="toggleInfoPopover('yoyInfoBanner')" title="How is this comparison built?">?</button></h2>
+    <div class="banner" id="yoyInfoBanner" style="display:none;">2025 figures come from a saved Salesforce report of Contacts (already converted from Leads) tied to "Booth Scans | AI Infra Summit 2025", at In Progress (SAL) or Open Deal stage — a post-event snapshot. 2026 figures come from the live Lead/CampaignMember sync for this year's campaign, captured pre-event. See the Methodology footnote before reading this as apples-to-apples.</div>
+    <div class="kpi-row">
+      <div class="kpi-card"><div class="name">2025 Contacts (SAL / Open Deal)</div><div class="stat-value">${parsed.total}</div><div class="stat-sub">from saved report, post-event</div></div>
+      <div class="kpi-card"><div class="name">2026 Leads (live, pre-event)</div><div class="stat-value">${total2026}</div><div class="stat-sub">event starts 2026-09-15</div></div>
+      <div class="kpi-card"><div class="name">Change vs. 2025</div><div class="stat-value">${delta >= 0 ? '+' : ''}${delta}</div><div class="stat-sub">${deltaPct} — not yet meaningful pre-event</div></div>
+    </div>
+    <div class="charts-row">
+      <div class="chart-card" style="flex: 1 1 100%;">
+        <h3>Contacts / Leads by rep — 2025 vs 2026</h3>
+        <div class="hint">2025 = converted Contacts from the saved report; 2026 = live Leads from the campaign sync</div>
+        <div class="chart-wrap"><canvas id="yoyRepChart"></canvas></div>
+      </div>
+    </div>
+    <div class="section-hint">2025 status breakdown: ${statusEntries.map(([label, val]) => esc(label) + ' (' + val + ')').join(', ') || '—'}</div>
+  `;
+  document.getElementById('yoyContent').insertAdjacentHTML('beforeend', html);
+
+  renderGroupedBarChart('yoyRepChart', allReps, [
+    { label: '2025', data: allReps.map(r => parsed.byRep[r] || 0), backgroundColor: '#d1cae7' },
+    { label: '2026', data: allReps.map(r => reps2026[r] || 0), backgroundColor: '#83b7a4' },
+  ]);
+}
+
+function renderBarChart(canvasId, counts, label) {
+  const ctx = document.getElementById(canvasId);
+  if (!ctx) return;
+  const labels = Object.keys(counts).sort((a,b) => counts[b]-counts[a]);
+  if (charts[canvasId]) charts[canvasId].destroy();
+  if (!labels.length) {
+    ctx.parentElement.insertAdjacentHTML('beforeend', '<div class="chart-empty" data-for="' + canvasId + '">No data yet.</div>');
+    return;
+  }
+  charts[canvasId] = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets: [{ label, data: labels.map(l => counts[l]), backgroundColor: '#abbed9' }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, ticks: { color: '#9aa2af', precision: 0 }, grid: { color: '#23262d' } }, x: { ticks: { color: '#9aa2af' }, grid: { display: false } } } }
+  });
+}
+
+function renderKpis(meta, accounts) {
+  const netNewOpps = 0; // populated once real opportunities exist (see origin field)
+  const kpis = [
+    ['Distinct Companies', meta.distinct_companies ?? 0, 'unique accounts on this campaign'],
+    ['Net-New Companies', meta.companies_net_new ?? 0, 'no prior Opportunity, Contact, or open Lead'],
+    ['Already-Engaged Accounts', meta.companies_already_engaged ?? 0, 'someone at the company already talking to us'],
+    ['Total Leads', meta.lead_count ?? 0, 'across all tracked reps'],
+    ['Rep-owned Opportunities', meta.opp_count ?? 0, 'owned by the 4 tracked reps'],
+    ['Potential Pipeline', fmtMoney(meta.potential_pipeline_total), '$200K default per account without a real open Opportunity'],
+  ];
+  document.getElementById('mainContent').insertAdjacentHTML('beforeend',
+    '<div class="kpi-row">' + kpis.map(([name, val, sub]) =>
+      '<div class="kpi-card"><div class="name">' + esc(name) + '</div><div class="stat-value">' + esc(val) + '</div><div class="stat-sub">' + esc(sub) + '</div></div>'
+    ).join('') + '</div>'
+  );
+}
+
+function renderCharts(leads, opps, accounts, byRep) {
+  const html = `
+    <div class="charts-row">
+      <div class="chart-card" style="flex: 1 1 100%;">
+        <h3>Lead lifecycle funnel</h3>
+        <div class="hint">Leads &rarr; MEL &rarr; MQL &rarr; SAL, based on real Salesforce Lead Status (or a best-effort keyword classification when Status isn't set); bar width = share of the largest stage.</div>
+        <div class="funnel-wrap" id="personaFunnel"></div>
+      </div>
+    </div>
+    <div class="charts-row">
+      <div class="chart-card"><h3>Company engagement</h3><div class="hint">Already-engaged vs. net-new companies</div><div class="chart-wrap pie-wrap"><canvas id="engageChart"></canvas></div></div>
+      <div class="chart-card"><h3>GTM persona breakdown</h3><div class="hint">Classified from job title (heuristic)</div><div class="chart-wrap pie-wrap"><canvas id="personaMixChart"></canvas></div></div>
+      <div class="chart-card"><h3>Net New vs. Existing Opportunities</h3><div class="hint">Net New = exact Lead Source + Created Date on/after 2026-09-15</div><div class="chart-wrap pie-wrap"><canvas id="oppOriginChart"></canvas></div></div>
+    </div>
+    <div class="charts-row">
+      <div class="chart-card"><h3>Leads by rep</h3><div class="chart-wrap"><canvas id="repChart"></canvas></div></div>
+      <div class="chart-card"><h3>Lead lifecycle stage (bar)</h3><div class="chart-wrap"><canvas id="lifecycleChart"></canvas></div></div>
+      <div class="chart-card"><h3>Account tier mix</h3><div class="hint">Salesforce Account ABM_Tier__c field</div><div class="chart-wrap pie-wrap"><canvas id="tierChart"></canvas></div></div>
+    </div>
+
+    <details class="table-drop" open id="accountTableDrop">
+      <summary>Company-level rollup (breadth) <span class="drop-count">— ${accounts.length} account${accounts.length===1?'':'s'}</span></summary>
+      <div id="accountGrid"></div>
+    </details>
+
+    <details class="table-drop" open>
+      <summary>Person-level detail (depth) <span class="drop-count">— ${leads.length} contact${leads.length===1?'':'s'}</span></summary>
+      <div id="leadGrid"></div>
+    </details>
+
+    <details class="table-drop" id="oppTableDrop">
+      <summary>Opportunities <span class="drop-count">— ${opps.length} rep-owned opportunit${opps.length===1?'y':'ies'}</span></summary>
+      <div id="oppGrid"></div>
+    </details>
+  `;
+  document.getElementById('mainContent').insertAdjacentHTML('beforeend', html);
+
+  renderFunnel('personaFunnel', countBy(leads, l => l.lifecycle_stage));
+  renderPieChart('engageChart', countBy(accounts, a => a.company_already_engaged === 'Yes' ? 'Already Engaged' : 'Net New'));
+  renderPieChart('personaMixChart', countBy(leads, l => classifyPersona(l.title)));
+  renderPieChart('oppOriginChart', countBy(opps, o => o.origin));
+  renderBarChart('repChart', Object.fromEntries(Object.entries(byRep).map(([rep, d]) => [rep, (d.leads || []).length])), 'Leads');
+  renderBarChart('lifecycleChart', countBy(leads, l => l.lifecycle_stage), 'Leads');
+  renderPieChart('tierChart', countBy(accounts, a => a.abm_tier || 'No tier set'));
+
+  if (leads.length) {
+    new gridjs.Grid({
+      columns: ['Company', 'First Name', 'Last Name', 'Title', 'Email', 'Owner', 'Lifecycle Stage', 'Already Engaged', 'Lead Source'],
+      data: leads.map(l => [l.company, l.first_name, l.last_name, l.title, l.email, l.owner, l.lifecycle_stage, l.company_already_engaged, l.lead_source]),
+      search: true, sort: true, resizable: true, pagination: { limit: 25 },
+      style: { table: { 'font-size': '11px' } },
+    }).render(document.getElementById('leadGrid'));
+  } else {
+    document.getElementById('leadGrid').innerHTML = '<div class="chart-empty" style="height:60px;">No leads yet.</div>';
+  }
+
+  if (opps.length) {
+    new gridjs.Grid({
+      columns: ['Account', 'Owner', 'Amount', 'Stage', 'Origin', 'Created Date', 'Campaign'],
+      data: opps.map(o => [o.account, o.owner, fmtMoney(o.amount), o.stage, o.origin, o.created_date, o.campaign]),
+      search: true, sort: true, resizable: true, pagination: { limit: 25 },
+      style: { table: { 'font-size': '11px' } },
+    }).render(document.getElementById('oppGrid'));
+  } else {
+    document.getElementById('oppGrid').innerHTML = '<div class="chart-empty" style="height:60px;">No opportunities yet.</div>';
+  }
+
+  if (accounts.length) {
+    new gridjs.Grid({
+      columns: ['Company', 'Booth/Campaign Leads', 'Already Engaged', 'Has Open Opportunity', 'Potential Pipeline', 'ABM Tier'],
+      data: accounts.map(a => [a.company, a.booth_scan_lead_count, a.company_already_engaged, a.has_open_opportunity ? 'Yes' : 'No', fmtMoney(a.potential_pipeline_amount), a.abm_tier || '—']),
+      search: true, sort: true, resizable: true, pagination: { limit: 25 },
+      style: { table: { 'font-size': '11px' } },
+    }).render(document.getElementById('accountGrid'));
+  } else {
+    document.getElementById('accountGrid').innerHTML = '<div class="chart-empty" style="height:60px;">No accounts yet.</div>';
+  }
+}
+
+(async function init() {
+  try {
+    const [meta, leads, opps, accounts, byRep] = await Promise.all([
+      fetchJson('data/meta.json'),
+      fetchJson('data/leads.json'),
+      fetchJson('data/opportunities.json'),
+      fetchJson('data/account_summary.json'),
+      fetchJson('data/by_rep.json'),
+    ]);
+
+    if (!leads.length) {
+      document.getElementById('dataBanner').innerHTML =
+        '<div class="banner warn">No leads or opportunities have synced yet for campaign 701TV00000tqRm2YAE — this dashboard is wired and ready, and will populate automatically once the sync (every 6h) starts returning real records.</div>';
+    }
+
+    renderKpis(meta || {}, accounts || []);
+    renderCharts(leads || [], opps || [], accounts || [], byRep || {});
+
+    try {
+      const report2025 = await fetchJson('data/report_' + REPORT_2025_ID + '.json');
+      renderYoY(report2025, meta || {}, byRep || {});
+    } catch (yoyErr) {
+      console.warn('2025 comparison report unavailable:', yoyErr);
+      document.getElementById('yoyContent').innerHTML =
+        '<h2 class="section">Year-over-Year: 2025 vs 2026</h2><div class="banner warn">2025 comparison report data not available yet (data/report_' + esc(REPORT_2025_ID) + '.json).</div>';
+    }
+
+    document.getElementById('loadedAt').textContent = 'loaded ' + new Date().toLocaleString();
+  } catch (err) {
+    console.error(err);
+    document.getElementById('dataBanner').innerHTML =
+      '<div class="banner warn">Error loading data from ' + esc(REPO_NAME) + ': ' + esc(err.message) + '. If this repo is private, raw.githubusercontent.com fetches will fail from a public Netlify site — it needs to be public for this page to work.</div>';
+  }
+})();
 </script>
 </body>
 </html>
