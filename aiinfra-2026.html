@@ -59,7 +59,7 @@
   .chart-wrap { position: relative; height: 170px; }
   .chart-wrap.pie-wrap { height: 260px; }
   .chart-empty { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-faint); font-size: 10.5px; }
-  #accountGrid, #leadGrid, #oppGrid { background: var(--bg-1); border-radius: 8px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 6px; }
+  #accountGrid, #leadGrid, #oppGrid, #abmMatchedGrid, #abmUnmatchedGrid { background: var(--bg-1); border-radius: 8px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 6px; }
   .gridjs-th { font-size: 10.5px; }
   .gridjs-td { font-size: 11px; }
   .footnote { font-size: 10px; color: var(--text-faint); margin-top: 8px; line-height: 1.6; }
@@ -115,6 +115,8 @@
 
 <div id="yoyContent"></div>
 
+<div id="abmCoverageContent"></div>
+
 <div class="footnote">
   <span class="methodology-wrap">
     <b>Methodology</b> <span class="info-icon-btn" title="Hover for methodology details">?</span>
@@ -126,7 +128,8 @@
       &bull; "GTM persona" is a heuristic classification from job-title keywords, not a Salesforce field — treat as a starting point, not ground truth.<br/>
       &bull; "Company segment mix" (Hyperscaler / Neocloud / Enterprise / Startup / Other) from the RAISE template is intentionally omitted here — that was a manual judgment call per account, not synced data, and there are no accounts yet to classify.<br/>
       &bull; Data refreshes automatically every 6 hours via the clockwork-sfdc-sync-aiinfra26 GitHub Action; re-open this page to see the latest snapshot as of load time.<br/>
-      &bull; <b>Year-over-Year (2025 vs 2026)</b>: 2025 figures come from a saved Salesforce report (Contacts already converted from Leads, tied to the "Booth Scans | AI Infra Summit 2025" campaign, at In Progress (SAL) or Open Deal stage) — a post-event snapshot. 2026 figures come from the live Lead/CampaignMember sync for this year's campaign, captured pre-event. Different object types (Contact vs. Lead) at different funnel stages, captured at different points in each event's lifecycle — this is directional context, not a strict apples-to-apples comparison.
+      &bull; <b>Year-over-Year (2025 vs 2026)</b>: 2025 figures come from a saved Salesforce report (Contacts already converted from Leads, tied to the "Booth Scans | AI Infra Summit 2025" campaign, at In Progress (SAL) or Open Deal stage) — a post-event snapshot. 2026 figures come from the live Lead/CampaignMember sync for this year's campaign, captured pre-event. Different object types (Contact vs. Lead) at different funnel stages, captured at different points in each event's lifecycle — this is directional context, not a strict apples-to-apples comparison.<br/>
+      &bull; <b>ABM Tier Coverage</b>: cross-references the uploaded AI Infra Summit 2026 attendee/speaker roster against Salesforce's "ABM Tier accounts" report (00OTV00000SAiyv2AD), matched by normalized company name (not domain, since the roster doesn't include one) — punctuation and common suffixes (Inc, LLC, Corp, Group, Technologies, etc.) are stripped before comparing, so close-but-not-exact name variants may still be missed. The Salesforce Reports API caps a single report run at 2,000 detail rows, so the ABM account list itself may not cover every tiered account in the org.
     </div>
   </span>
 </div>
@@ -314,6 +317,70 @@ function renderYoY(report2025, meta2026, byRep2026) {
   ]);
 }
 
+function renderAbmCoverage(data) {
+  const s = data.summary || {};
+  const matched = data.matched || [];
+  const unmatched = data.unmatched || [];
+  const tierOrder = ['Tier 1', 'Tier 2', 'Tier 3', 'Tier 4', 'Untiered'];
+  const tierLabels = tierOrder.filter(t => (s.tier_company_counts || {})[t] || (s.tier_attendee_counts || {})[t]);
+  const matchPct = s.total_companies ? Math.round((s.matched_companies / s.total_companies) * 100) : 0;
+
+  const html = `
+    <h2 class="section">ABM Tier Coverage: Attendee Roster vs. Salesforce <button class="info-icon-btn" onclick="toggleInfoPopover('abmInfoBanner')" title="How is this built?">?</button></h2>
+    <div class="banner" id="abmInfoBanner" style="display:none;">Cross-references the uploaded AI Infra Summit 2026 attendee/speaker roster (${s.total_attendees} people, ${s.total_companies} companies) against Salesforce's ABM Tier accounts report, matched by normalized company name. See the Methodology footnote for match-quality caveats and the Reports API's 2,000-row cap.</div>
+    <div class="kpi-row">
+      <div class="kpi-card"><div class="name">Total Attendees</div><div class="stat-value">${s.total_attendees ?? 0}</div><div class="stat-sub">from uploaded roster</div></div>
+      <div class="kpi-card"><div class="name">Companies Represented</div><div class="stat-value">${s.total_companies ?? 0}</div><div class="stat-sub">unique companies attending</div></div>
+      <div class="kpi-card"><div class="name">Companies Matched to ABM Tier</div><div class="stat-value">${s.matched_companies ?? 0}</div><div class="stat-sub">${matchPct}% of attending companies</div></div>
+      <div class="kpi-card"><div class="name">Attendees at Tiered Accounts</div><div class="stat-value">${s.attendees_at_matched_companies ?? 0}</div><div class="stat-sub">of ${s.total_attendees ?? 0} total attendees</div></div>
+    </div>
+    <div class="charts-row">
+      <div class="chart-card" style="flex: 1 1 100%;">
+        <h3>ABM tier breakdown — companies vs. attendees</h3>
+        <div class="hint">Companies matched to each tier, and how many attendees come from those companies</div>
+        <div class="chart-wrap"><canvas id="abmTierChart"></canvas></div>
+      </div>
+    </div>
+    <details class="table-drop" open>
+      <summary>Attending companies matched to an ABM tier <span class="drop-count">— ${matched.length} compan${matched.length===1?'y':'ies'}</span></summary>
+      <div id="abmMatchedGrid"></div>
+    </details>
+    <details class="table-drop">
+      <summary>Attending companies with no ABM tier match <span class="drop-count">— ${unmatched.length} compan${unmatched.length===1?'y':'ies'}</span></summary>
+      <div id="abmUnmatchedGrid"></div>
+    </details>
+  `;
+  document.getElementById('abmCoverageContent').insertAdjacentHTML('beforeend', html);
+
+  renderGroupedBarChart('abmTierChart', tierLabels, [
+    { label: 'Companies', data: tierLabels.map(t => (s.tier_company_counts || {})[t] || 0), backgroundColor: '#abbed9' },
+    { label: 'Attendees', data: tierLabels.map(t => (s.tier_attendee_counts || {})[t] || 0), backgroundColor: '#83b7a4' },
+  ]);
+
+  if (matched.length) {
+    new gridjs.Grid({
+      columns: ['Company', 'ABM Tier', 'Owner', 'Industry', 'GPU Segment', 'ICP Fit', 'Attendees', 'Attendee Names'],
+      data: matched.map(m => [m.company, m.tier, m.owner, m.industry, m.gpu_segment, m.icp_fit, m.attendee_count,
+        (m.attendees || []).map(p => p.name).join(', ')]),
+      search: true, sort: true, resizable: true, pagination: { limit: 25 },
+      style: { table: { 'font-size': '11px' } },
+    }).render(document.getElementById('abmMatchedGrid'));
+  } else {
+    document.getElementById('abmMatchedGrid').innerHTML = '<div class="chart-empty" style="height:60px;">No matches yet.</div>';
+  }
+
+  if (unmatched.length) {
+    new gridjs.Grid({
+      columns: ['Company', 'Attendees', 'Attendee Names'],
+      data: unmatched.map(m => [m.company, m.attendee_count, (m.attendees || []).map(p => p.name).join(', ')]),
+      search: true, sort: true, resizable: true, pagination: { limit: 25 },
+      style: { table: { 'font-size': '11px' } },
+    }).render(document.getElementById('abmUnmatchedGrid'));
+  } else {
+    document.getElementById('abmUnmatchedGrid').innerHTML = '<div class="chart-empty" style="height:60px;">Every attending company matched.</div>';
+  }
+}
+
 function renderBarChart(canvasId, counts, label) {
   const ctx = document.getElementById(canvasId);
   if (!ctx) return;
@@ -452,6 +519,15 @@ function renderCharts(leads, opps, accounts, byRep) {
       console.warn('2025 comparison report unavailable:', yoyErr);
       document.getElementById('yoyContent').innerHTML =
         '<h2 class="section">Year-over-Year: 2025 vs 2026</h2><div class="banner warn">2025 comparison report data not available yet (data/report_' + esc(REPORT_2025_ID) + '.json).</div>';
+    }
+
+    try {
+      const abmCrossref = await fetchJson('data/attendee_abm_crossref.json');
+      renderAbmCoverage(abmCrossref);
+    } catch (abmErr) {
+      console.warn('ABM tier cross-reference unavailable:', abmErr);
+      document.getElementById('abmCoverageContent').innerHTML =
+        '<h2 class="section">ABM Tier Coverage: Attendee Roster vs. Salesforce</h2><div class="banner warn">Attendee/ABM tier cross-reference data not available yet (data/attendee_abm_crossref.json).</div>';
     }
 
     document.getElementById('loadedAt').textContent = 'loaded ' + new Date().toLocaleString();
