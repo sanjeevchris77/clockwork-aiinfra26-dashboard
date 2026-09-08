@@ -59,7 +59,7 @@
   .chart-wrap { position: relative; height: 170px; }
   .chart-wrap.pie-wrap { height: 260px; }
   .chart-empty { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-faint); font-size: 10.5px; }
-  #accountGrid, #leadGrid, #oppGrid, #preAccountGrid, #preOppGrid, #preUnmatchedGrid, #hubspotMqaGrid { background: var(--bg-1); border-radius: 8px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 6px; }
+  #accountGrid, #leadGrid, #oppGrid, #preAccountGrid, #preOppGrid, #preUnmatchedGrid, #hubspotMqaGrid, #warmthGrid { background: var(--bg-1); border-radius: 8px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 6px; }
   .gridjs-th { font-size: 10.5px; }
   .gridjs-td { font-size: 11px; }
   .footnote { font-size: 10px; color: var(--text-faint); margin-top: 8px; line-height: 1.6; }
@@ -181,6 +181,11 @@ function esc(s) {
 function fmtMoney(n) {
   n = Number(n) || 0;
   return '$' + n.toLocaleString('en-US');
+}
+function fmtDate(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return isNaN(d) ? '—' : d.toLocaleDateString();
 }
 function sfdcLinkCell(link) {
   return link ? gridjs.html('<a href="' + esc(link) + '" target="_blank" rel="noopener" style="color:var(--blue)">Open</a>') : '—';
@@ -371,6 +376,7 @@ function renderPreEventAnalysis(data, hubspotData) {
   // campaign?" Deliberately kept separate from the Event & Post-Event tab's
   // Lead lifecycle funnel, which measures conversion FROM this event only.
   let warmthHtml = '';
+  let warmthRows = [];
   if (hubspotData) {
     const hubspotByAcctId = {};
     (hubspotData.companies || []).forEach(c => { if (c.sfdc_account_id) hubspotByAcctId[c.sfdc_account_id] = c; });
@@ -381,17 +387,23 @@ function renderPreEventAnalysis(data, hubspotData) {
       if (hc) {
         matchedToHubspot++;
         if (hc.is_mqa) warmCount++;
+        warmthRows.push({ account: a, hubspot: hc });
       }
     });
+    warmthRows.sort((x, y) => (y.hubspot.is_mqa - x.hubspot.is_mqa) || (y.hubspot.mql_plus_contact_count - x.hubspot.mql_plus_contact_count));
     const warmPct = matchedToHubspot ? Math.round((warmCount / matchedToHubspot) * 100) : 0;
     warmthHtml = `
       <h2 class="section">Attendee Warmth (Pre-Event) <button class="info-icon-btn" onclick="toggleInfoPopover('warmthInfoBanner')" title="How is this computed?">?</button></h2>
-      <div class="banner" id="warmthInfoBanner" style="display:none;">Portal-wide HubSpot engagement, not scoped to this campaign — shows how warm attending accounts already are in HubSpot walking in, independent of any booth-scan activity at this event. Joined by real Salesforce Account Id. See the Account Engagement (HubSpot) tab for the full portal-wide view.</div>
+      <div class="banner" id="warmthInfoBanner" style="display:none;">Portal-wide HubSpot engagement, not scoped to this campaign — shows how warm attending accounts already are in HubSpot walking in, independent of any booth-scan activity at this event. Joined by real Salesforce Account Id. "Qualified Since" / "Last Activity" come from each account's single best (highest-stage) HubSpot contact — a live check of this portal found ~98% of MQL+ contacts have no tracked marketing engagement (no form conversions, source = Offline), so these dates are the closest reliable "is anyone engaging with this account" signal available, not a marketing-attribution trail. See the Account Engagement (HubSpot) tab for the full portal-wide view.</div>
       <div class="kpi-row">
         <div class="kpi-card"><div class="name">Attending Accounts Matched to HubSpot</div><div class="stat-value">${matchedToHubspot}</div><div class="stat-sub">of ${accounts.length} tiered attending accounts</div></div>
         <div class="kpi-card"><div class="name">Already Marketing Qualified (HubSpot)</div><div class="stat-value">${warmCount}</div><div class="stat-sub">at least one contact at MQL+ before the event</div></div>
         <div class="kpi-card"><div class="name">Warm %</div><div class="stat-value">${warmPct}%</div><div class="stat-sub">of matched attending accounts</div></div>
       </div>
+      <details class="table-drop">
+        <summary>Which attending accounts are warm <span class="drop-count">— ${matchedToHubspot} account${matchedToHubspot===1?'':'s'} matched to HubSpot</span></summary>
+        <div id="warmthGrid"></div>
+      </details>
     `;
   } else {
     warmthHtml = `
@@ -431,6 +443,21 @@ function renderPreEventAnalysis(data, hubspotData) {
     </details>
   `;
   document.getElementById('preEventContent').innerHTML = html;
+
+  if (warmthRows.length) {
+    new gridjs.Grid({
+      columns: ['Account', 'ABM Tier', 'Owner', 'Warm?', 'HubSpot Stage', 'MQL+ Contacts',
+        'Qualified Since', 'Best Contact', 'Last Activity', 'Account (SFDC)'],
+      data: warmthRows.map(({ account: a, hubspot: hc }) => [
+        a.company, a.tier, a.owner, hc.is_mqa ? 'Yes' : 'No', hc.highest_lifecyclestage,
+        hc.mql_plus_contact_count, fmtDate(hc.qualified_since),
+        hc.best_contact_name || '—', fmtDate(hc.last_activity_date),
+        sfdcLinkCell(a.account_sfdc_link),
+      ]),
+      search: true, sort: true, resizable: true, pagination: { limit: 25 },
+      style: { table: { 'font-size': '11px' } },
+    }).render(document.getElementById('warmthGrid'));
+  }
 
   renderGroupedBarChart('preTierChart', tierLabels, [
     { label: 'Accounts', data: tierLabels.map(t => tierBreakdown[t].accounts || 0), backgroundColor: '#abbed9' },
@@ -525,9 +552,10 @@ function renderHubspotEngagement(data) {
   if (mqaRows.length) {
     new gridjs.Grid({
       columns: ['Company', 'Domain', 'Industry', 'Highest Lifecycle Stage', 'MQL+ Contacts', 'Total Contacts',
-        'Salesforce Tier', 'Salesforce Owner', 'Account (SFDC)'],
+        'Qualified Since', 'Best Contact', 'Last Activity', 'Salesforce Tier', 'Salesforce Owner', 'Account (SFDC)'],
       data: mqaRows.map(r => [r.name, r.domain || '—', r.industry || '—', r.highest_lifecyclestage,
-        r.mql_plus_contact_count, r.contact_count, r.sfdc_tier || 'Not Matched to Salesforce',
+        r.mql_plus_contact_count, r.contact_count, fmtDate(r.qualified_since), r.best_contact_name || '—',
+        fmtDate(r.last_activity_date), r.sfdc_tier || 'Not Matched to Salesforce',
         r.sfdc_owner || '—', sfdcLinkCell(r.account_sfdc_link)]),
       search: true, sort: true, resizable: true, pagination: { limit: 25 },
       style: { table: { 'font-size': '11px' } },
