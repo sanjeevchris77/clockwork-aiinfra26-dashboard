@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>AI Infra Summit 2026 — Sales Priorities</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridjs@5.0.2/dist/theme/mermaid.min.css" integrity="sha384-jZvDSsmGB9oGGT/4l9bHXGoAv1OxvG/cFmSo0dZaSqmBgvQTKDBFAMftlXTmMbNW" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/gridjs@5.0.2/dist/gridjs.umd.js" integrity="sha384-/XXDzxe4FsGiAe50i/u9pY/Vy/uX654MHB1xoc1BJNnH1WXHhqHga9g3q5tF4gj7" crossorigin="anonymous"></script>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #0a0b0d;
+    --bg-1: #131519;
+    --bg-2: #1a1d23;
+    --bg-3: #20242b;
+    --border: #2a2e37;
+    --border-soft: #23262d;
+    --text: #e7e9ec;
+    --text-dim: #9aa2af;
+    --text-faint: #6b7280;
+    --blue: #abbed9;
+    --blue-soft: #1c2a44;
+    --green: #83b7a4;
+    --green-soft: #12271f;
+    --red: #e1bbbb;
+    --red-soft: #2a1616;
+    --amber: #ccb886;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 14px;
+    font-size: 13px;
+  }
+  .page { max-width: 1280px; margin: 0 auto; }
+  h1 { font-size: 17px; margin: 0 0 2px 0; font-weight: 700; letter-spacing: -.01em; }
+  h2.section { font-size: 14px; margin: 22px 0 4px 0; color: var(--text); font-weight: 700; }
+  .section-sub { font-size: 11px; color: var(--text-faint); margin-bottom: 8px; }
+  .subtitle { color: var(--text-faint); font-size: 11.5px; margin-bottom: 10px; }
+  .banner { font-size: 11.5px; padding: 8px 12px; border-radius: 6px; margin-bottom: 12px; background: var(--blue-soft); color: #cad6e8; border: 1px solid #26385c; }
+  .banner.action { background: var(--green-soft); color: #d3ece2; border-color: #2c5c48; font-weight: 600; }
+  .kpi-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+  .kpi-card { flex: 1; min-width: 160px; background: var(--bg-1); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; }
+  .kpi-card.p1 { border-color: #2c5c48; }
+  .kpi-card.p3 { border-color: #4a3c1c; }
+  .kpi-card .name { font-weight: 600; font-size: 10px; margin-bottom: 4px; color: var(--text-faint); text-transform: uppercase; letter-spacing: .03em; }
+  .kpi-card .stat-value { font-size: 20px; font-weight: 700; color: var(--text); }
+  .kpi-card .stat-sub { font-size: 10px; color: var(--text-faint); margin-top: 2px; }
+  #p1Grid, #p2Grid, #p3Grid { background: var(--bg-1); border-radius: 8px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 10px; }
+  .footnote { font-size: 10px; color: var(--text-faint); margin-top: 16px; line-height: 1.6; }
+  .rep-yes { color: #bcd9ce; font-weight: 600; }
+  .rep-no { color: var(--amber); }
+
+  /* Readable headers, generous row height, no horizontal scroll: wrap text
+     instead of truncating, fix the table to the container width, and give
+     every column an explicit share of that width (set per-grid below). */
+  .gridjs-table { table-layout: fixed !important; width: 100% !important; }
+  th.gridjs-th, td.gridjs-td {
+    white-space: normal !important;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    line-height: 1.4;
+  }
+  th.gridjs-th { vertical-align: bottom; padding: 8px 6px !important; }
+  th.gridjs-th-content { white-space: normal !important; overflow: visible !important; text-overflow: clip !important; }
+  td.gridjs-td { padding: 8px 6px !important; }
+
+  .gridjs-wrapper { background: var(--bg-1) !important; border: none !important; box-shadow: none !important; }
+  .gridjs-table { background: var(--bg-1) !important; color: var(--text) !important; }
+  th.gridjs-th { background: var(--bg-2) !important; color: var(--text-faint) !important; border-color: var(--border) !important; }
+  td.gridjs-td { background: var(--bg-1) !important; color: var(--text) !important; border-color: var(--border-soft) !important; }
+  .gridjs-tr:hover td.gridjs-td { background: var(--bg-2) !important; }
+  .gridjs-footer { background: var(--bg-1) !important; border-color: var(--border) !important; }
+  .gridjs-pagination { color: var(--text-dim) !important; }
+  .gridjs-pagination button { background: var(--bg-2) !important; color: var(--text-dim) !important; border-color: var(--border) !important; }
+  .gridjs-pagination button:hover:not([disabled]) { background: var(--bg-3) !important; }
+  .gridjs-pagination button:disabled { opacity: .4; }
+  .gridjs-search-input { background: var(--bg-2) !important; color: var(--text) !important; border-color: var(--border) !important; }
+  .gridjs-input::placeholder { color: var(--text-faint); }
+  .gridjs-summary { color: var(--text-faint) !important; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<h1>AI Infra Summit 2026 — Sales Priorities</h1>
+<div class="subtitle">209 companies attending &middot; <span id="loadedAt"></span></div>
+
+<div class="banner">On-site at the event: <b>Greg Mark</b> and <b>Joe</b>. If you own an account below and aren't listed as attending, use your AI Infra "Book a Demo" page and outreach list instead of the event app.</div>
+
+<div class="kpi-row">
+  <div class="kpi-card p1"><div class="name">Priority 1 — Open Opportunities</div><div class="stat-value" id="p1Count">—</div><div class="stat-sub">accounts with a real deal already in motion</div></div>
+  <div class="kpi-card"><div class="name">Priority 2 — Responded to Email</div><div class="stat-value" id="p2Count">—</div><div class="stat-sub">engaged, no open deal yet</div></div>
+  <div class="kpi-card p3"><div class="name">Priority 3 — Cold</div><div class="stat-value" id="p3Count">—</div><div class="stat-sub">no response yet, may still be ICP</div></div>
+</div>
+
+<h2 class="section">Priority 1 — Open Opportunities</h2>
+<div class="section-sub">Highest priority. These accounts already have a real, open deal in Salesforce.</div>
+<div class="banner action">Action: go into the AI Infra Summit event app and set up a 1:1 meeting with each of these accounts before Friday.</div>
+<div id="p1Grid"></div>
+
+<h2 class="section">Priority 2 — Responded to Email</h2>
+<div class="section-sub">Second priority. Someone at these accounts has responded to outreach, but there's no open deal yet.</div>
+<div id="p2Grid"></div>
+
+<h2 class="section">Priority 3 — Cold</h2>
+<div class="section-sub">Third priority. No response yet — doesn't mean they're not a fit, just that email hasn't worked. Worth a call or LinkedIn touch.</div>
+<div id="p3Grid"></div>
+
+<div class="footnote">
+  15 accounts have an open Salesforce opportunity (17 total open opportunities across them — 2 accounts have more than one). Priority 2 and 3 are sized to not repeat any account already in Priority 1. GPU Segment / Industry / Target Account / ICP Fit / Stage / Amount / Best Contact / SFDC links are blank for Priority 3 accounts — they have no matching Salesforce Account yet, which is exactly why they're "cold."
+</div>
+
+</div>
+
+<script>
+const REPO_OWNER = 'sanjeevchris77';
+const REPO_NAME = 'clockwork-sfdc-sync-aiinfra26';
+const REPO_BRANCH = 'main';
+const RAW_BASE = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${REPO_BRANCH}/`;
+
+// Reps physically on-site at this event -- update by hand per event. Used
+// to flag, per account, whether its Salesforce owner is the one who can act
+// via the event's 1:1 meeting app, or whether they should rely on the
+// Book-a-Demo landing page + outreach list instead.
+const EVENT_ATTENDING_REPS = ['Greg Mark'];
+
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function fmtMoney(n) {
+  if (n == null) return '—';
+  n = Number(n) || 0;
+  return '$' + n.toLocaleString('en-US');
+}
+function fmtDate(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return isNaN(d) ? '—' : d.toLocaleDateString();
+}
+function sfdcLinkCell(link) {
+  return link ? gridjs.html('<a href="' + esc(link) + '" target="_blank" rel="noopener" style="color:var(--blue)">Open</a>') : '—';
+}
+function attendeesCell(attendees) {
+  const list = (attendees || []).map(p => p.title ? `${p.name} (${p.title})` : p.name).filter(Boolean);
+  return list.length ? list.join(', ') : '—';
+}
+function repCell(owner) {
+  if (!owner) return gridjs.html('<span class="rep-no">Unowned — net new</span>');
+  const attending = EVENT_ATTENDING_REPS.includes(owner);
+  return gridjs.html(
+    attending
+      ? `<span class="rep-yes">${esc(owner)} — attending, use event app</span>`
+      : `<span class="rep-no">${esc(owner)} — not attending, use landing page</span>`
+  );
+}
+
+async function fetchJson(path) {
+  const res = await fetch(RAW_BASE + path, { cache: 'no-store' });
+  if (!res.ok) throw new Error(path + ': HTTP ' + res.status);
+  return res.json();
+}
+
+function extractSfdcAccountId(link) {
+  if (!link) return null;
+  const m = /\/Account\/([a-zA-Z0-9]+)\/view/.exec(link);
+  return m ? m[1] : null;
+}
+
+// Same full column set as the Tier Mapping table on aiinfra-2026-sales.html,
+// plus the attendee/ownership columns specific to this page. Widths sum to
+// 100% so all 17 columns fit the page width with no horizontal scroll.
+const PRIORITY_COLUMNS = [
+  { name: 'Account', width: '8%' },
+  { name: 'Attendee(s)', width: '9%' },
+  { name: 'Owner', width: '8%' },
+  { name: 'Tier', width: '4%' },
+  { name: 'GPU Segment', width: '6%' },
+  { name: 'Industry', width: '6%' },
+  { name: 'Target Account', width: '5%' },
+  { name: 'ICP Fit', width: '5%' },
+  { name: 'Has Open Opp', width: '5%' },
+  { name: 'Stage', width: '7%' },
+  { name: 'Amount', width: '5%' },
+  { name: 'Best Contact', width: '7%' },
+  { name: 'Sourced Campaign', width: '6%' },
+  { name: 'First Touch', width: '5%' },
+  { name: 'Last Touch', width: '5%' },
+  { name: 'Account (SFDC)', width: '5%' },
+  { name: 'Opportunity (SFDC)', width: '4%' },
+];
+
+function renderPriorityGrid(elId, rows) {
+  const el = document.getElementById(elId);
+  if (!rows.length) {
+    el.innerHTML = '<div style="padding:16px; color:var(--text-faint); font-size:11px;">No accounts in this list.</div>';
+    return;
+  }
+  new gridjs.Grid({
+    columns: PRIORITY_COLUMNS,
+    data: rows,
+    search: true, sort: true, resizable: false, pagination: { limit: 25 },
+    style: { table: { 'font-size': '9.5px' } },
+  }).render(el);
+}
+
+// Builds a full 17-cell row for an account object from pre_event_analysis.json
+// (works for both Priority 1 and Priority 2, which share the same shape).
+function accountRow(a, extra) {
+  return [
+    a.company, attendeesCell(a.attendees), repCell(a.owner), a.tier || '—',
+    a.gpu_segment || '—', a.industry || '—',
+    a.target_account ? 'Yes' : 'No', a.icp_account || '—',
+    a.has_open_opportunity ? 'Yes' : 'No',
+    a.stage || '—', a.amount != null ? fmtMoney(a.amount) : '—', a.best_contact || '—',
+    a.event_family || a.primary_campaign || '—',
+    fmtDate(extra && extra.firstTouch !== undefined ? extra.firstTouch : a.first_touch),
+    fmtDate(extra && extra.lastTouch !== undefined ? extra.lastTouch : a.last_touch),
+    sfdcLinkCell(a.account_sfdc_link), sfdcLinkCell(a.sfdc_link),
+  ];
+}
+
+async function init() {
+  try {
+    const preEvent = await fetchJson('data/pre_event_analysis.json');
+    let hubspotByAcctId = {};
+    try {
+      const hubspotData = await fetchJson('data/hubspot_mqa.json');
+      (hubspotData.companies || []).forEach(c => { if (c.sfdc_account_id) hubspotByAcctId[c.sfdc_account_id] = c; });
+    } catch (e) {
+      console.warn('HubSpot data unavailable, Priority 2 Last Touch will be blank:', e);
+    }
+
+    const accounts = preEvent.accounts || [];
+    const unmatched = preEvent.unmatched_companies || [];
+
+    const p1 = accounts.filter(a => a.has_open_opportunity);
+    const p2 = accounts.filter(a => !a.has_open_opportunity);
+    const p3 = unmatched;
+
+    document.getElementById('p1Count').textContent = p1.length;
+    document.getElementById('p2Count').textContent = p2.length;
+    document.getElementById('p3Count').textContent = p3.length;
+
+    renderPriorityGrid('p1Grid', p1.map(a => accountRow(a)));
+
+    renderPriorityGrid('p2Grid', p2.map(a => {
+      const acctId = extractSfdcAccountId(a.account_sfdc_link);
+      const hc = acctId ? hubspotByAcctId[acctId] : null;
+      return accountRow(a, {
+        firstTouch: hc ? hc.qualified_since : null,
+        lastTouch: hc ? hc.last_activity_date : null,
+      });
+    }));
+
+    renderPriorityGrid('p3Grid', p3.map(u => [
+      u.company, attendeesCell(u.attendees), repCell(null), 'Net New',
+      '—', '—', '—', '—', '—', '—', '—', '—', '—', '—', '—', '—', '—',
+    ]));
+
+    document.getElementById('loadedAt').textContent = 'loaded ' + new Date().toLocaleString();
+  } catch (err) {
+    console.error(err);
+    document.querySelector('.page').insertAdjacentHTML('beforeend',
+      '<div class="banner" style="background:#362c14;color:#ccb886;border-color:#4a3c1c;">Data not available yet: ' + esc(err.message) + '</div>');
+  }
+}
+
+init();
+</script>
+</body>
+</html>
