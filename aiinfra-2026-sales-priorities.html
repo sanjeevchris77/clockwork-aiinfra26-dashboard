@@ -48,10 +48,50 @@
   .kpi-card .name { font-weight: 600; font-size: 10px; margin-bottom: 4px; color: var(--text-faint); text-transform: uppercase; letter-spacing: .03em; }
   .kpi-card .stat-value { font-size: 20px; font-weight: 700; color: var(--text); }
   .kpi-card .stat-sub { font-size: 10px; color: var(--text-faint); margin-top: 2px; }
-  #p1Grid, #p2Grid, #p3Grid { background: var(--bg-1); border-radius: 8px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 10px; }
   .footnote { font-size: 10px; color: var(--text-faint); margin-top: 16px; line-height: 1.6; }
   .rep-yes { color: #bcd9ce; font-weight: 600; }
   .rep-no { color: var(--amber); }
+
+  /* Collapsible table sections: click the summary bar to expand/collapse
+     instead of stacking three full tables in one long scroll. */
+  details.table-drop {
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+  details.table-drop > summary {
+    cursor: pointer;
+    padding: 10px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    user-select: none;
+  }
+  details.table-drop > summary::-webkit-details-marker { display: none; }
+  details.table-drop > summary::before {
+    content: '\25B8';
+    display: inline-block;
+    color: var(--text-faint);
+    font-size: 10px;
+    transition: transform 0.15s ease;
+  }
+  details.table-drop[open] > summary::before { transform: rotate(90deg); }
+  details.table-drop > summary:hover { background: var(--bg-2); }
+  details.table-drop[open] > summary { border-bottom: 1px solid var(--border); }
+  .count-badge {
+    background: var(--bg-3);
+    color: var(--text-dim);
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 999px;
+  }
 
   /* Readable headers, generous row height, no horizontal scroll: wrap text
      instead of truncating, fix the table to the container width, and give
@@ -99,15 +139,24 @@
 <h2 class="section">Priority 1 — Open Opportunities</h2>
 <div class="section-sub">Highest priority. These accounts already have a real, open deal in Salesforce.</div>
 <div class="banner action">Action: go into the AI Infra Summit event app and set up a 1:1 meeting with each of these accounts before Friday.</div>
-<div id="p1Grid"></div>
+<details class="table-drop">
+  <summary>View accounts <span class="count-badge" id="p1SummaryCount">—</span></summary>
+  <div id="p1Grid"></div>
+</details>
 
 <h2 class="section">Priority 2 — Responded to Email</h2>
 <div class="section-sub">Second priority. Someone at these accounts has responded to outreach, but there's no open deal yet.</div>
-<div id="p2Grid"></div>
+<details class="table-drop">
+  <summary>View accounts <span class="count-badge" id="p2SummaryCount">—</span></summary>
+  <div id="p2Grid"></div>
+</details>
 
 <h2 class="section">Priority 3 — Cold</h2>
 <div class="section-sub">Third priority. No response yet — doesn't mean they're not a fit, just that email hasn't worked. Worth a call or LinkedIn touch.</div>
-<div id="p3Grid"></div>
+<details class="table-drop">
+  <summary>View accounts <span class="count-badge" id="p3SummaryCount">—</span></summary>
+  <div id="p3Grid"></div>
+</details>
 
 <div class="footnote">
   15 accounts have an open Salesforce opportunity (17 total open opportunities across them — 2 accounts have more than one). Priority 2 and 3 are sized to not repeat any account already in Priority 1. GPU Segment / Industry / Target Account / ICP Fit / Stage / Amount / Best Contact / SFDC links are blank for Priority 3 accounts — they have no matching Salesforce Account yet, which is exactly why they're "cold."
@@ -243,6 +292,9 @@ async function init() {
     document.getElementById('p1Count').textContent = p1.length;
     document.getElementById('p2Count').textContent = p2.length;
     document.getElementById('p3Count').textContent = p3.length;
+    document.getElementById('p1SummaryCount').textContent = p1.length;
+    document.getElementById('p2SummaryCount').textContent = p2.length;
+    document.getElementById('p3SummaryCount').textContent = p3.length;
 
     renderPriorityGrid('p1Grid', p1.map(a => accountRow(a)));
 
