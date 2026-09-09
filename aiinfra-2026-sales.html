@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>AI Infra Summit 2026 — Pre-Event Account Brief</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridjs@5.0.2/dist/theme/mermaid.min.css" integrity="sha384-jZvDSsmGB9oGGT/4l9bHXGoAv1OxvG/cFmSo0dZaSqmBgvQTKDBFAMftlXTmMbNW" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/gridjs@5.0.2/dist/gridjs.umd.js" integrity="sha384-/XXDzxe4FsGiAe50i/u9pY/Vy/uX654MHB1xoc1BJNnH1WXHhqHga9g3q5tF4gj7" crossorigin="anonymous"></script>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #0a0b0d;
+    --bg-1: #131519;
+    --bg-2: #1a1d23;
+    --bg-3: #20242b;
+    --border: #2a2e37;
+    --border-soft: #23262d;
+    --text: #e7e9ec;
+    --text-dim: #9aa2af;
+    --text-faint: #6b7280;
+    --blue: #abbed9;
+    --blue-soft: #1c2a44;
+    --purple: #d1cae7;
+    --purple-soft: #241f3d;
+    --green: #83b7a4;
+    --green-soft: #12271f;
+    --red: #e1bbbb;
+    --red-soft: #2a1616;
+    --amber: #ccb886;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 14px;
+    font-size: 13px;
+  }
+  .page { max-width: 1180px; margin: 0 auto; }
+  h1 { font-size: 17px; margin: 0 0 2px 0; font-weight: 700; letter-spacing: -.01em; }
+  h2.section { font-size: 12.5px; margin: 16px 0 3px 0; color: var(--text-dim); text-transform: uppercase; letter-spacing: .04em; font-weight: 700; }
+  .section-hint { font-size: 10.5px; color: var(--text-faint); margin-bottom: 6px; }
+  .subtitle { color: var(--text-faint); font-size: 11.5px; margin-bottom: 10px; }
+  .subtitle b { color: var(--text-dim); }
+  .banner { font-size: 11px; padding: 6px 10px; border-radius: 6px; margin-bottom: 10px; background: var(--blue-soft); color: #cad6e8; border: 1px solid #26385c; }
+  .banner.warn { background: #362c14; color: var(--amber); border-color: #4a3c1c; }
+  .info-icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 17px; height: 17px; border-radius: 50%; background: var(--blue-soft); color: #cad6e8; border: 1px solid #26385c; font-size: 10.5px; font-weight: 700; cursor: pointer; vertical-align: middle; margin-left: 7px; line-height: 1; padding: 0; }
+  .info-icon-btn:hover { background: #26385c; }
+  .kpi-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+  .kpi-card { flex: 1; min-width: 150px; background: var(--bg-1); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; }
+  .kpi-card .name { font-weight: 600; font-size: 10px; margin-bottom: 4px; color: var(--text-faint); text-transform: uppercase; letter-spacing: .03em; }
+  .kpi-card .stat-value { font-size: 17px; font-weight: 700; color: var(--text); }
+  .kpi-card .stat-sub { font-size: 10px; color: var(--text-faint); margin-top: 2px; }
+  .charts-row { display: flex; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+  .chart-card { flex: 1; min-width: 230px; background: var(--bg-1); border: 1px solid var(--border); border-radius: 8px; padding: 9px 11px; }
+  .chart-card h3 { font-size: 10px; margin: 0 0 1px 0; color: var(--text); font-weight: 600; }
+  .chart-card .hint { font-size: 8.5px; color: var(--text-faint); margin-bottom: 5px; }
+  .chart-wrap { position: relative; height: 170px; }
+  .chart-wrap.pie-wrap { height: 260px; }
+  .chart-empty { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-faint); font-size: 10.5px; }
+  #preAccountGrid, #preOppGrid, #preUnmatchedGrid, #warmthGrid { background: var(--bg-1); border-radius: 8px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 6px; }
+  .gridjs-th { font-size: 10.5px; }
+  .gridjs-td { font-size: 11px; }
+  .footnote { font-size: 10px; color: var(--text-faint); margin-top: 8px; line-height: 1.6; }
+  .footnote b { color: var(--text-dim); }
+  .tag { display: inline-block; font-size: 9.5px; padding: 1px 6px; border-radius: 999px; margin: 1px 2px 1px 0; }
+  .tag-engaged { background: var(--red-soft); color: #e8caca; font-weight: 600; }
+  .tag-netnew { background: var(--green-soft); color: #bcd9ce; font-weight: 600; }
+
+  .methodology-wrap { position: relative; display: inline-block; }
+  .methodology-tooltip { display: none; position: absolute; bottom: calc(100% + 6px); left: 0; z-index: 30; background: #05060a; color: #d7dadf; padding: 10px 12px; border-radius: 6px; font-size: 10px; line-height: 1.6; white-space: normal; width: 540px; max-width: 80vw; box-shadow: 0 4px 14px rgba(0,0,0,.5); border: 1px solid var(--border); }
+  .methodology-tooltip b { color: var(--text-dim); font-weight: 600; }
+  .methodology-wrap:hover .methodology-tooltip { display: block; }
+
+  details.table-drop { background: var(--bg-1); border: 1px solid var(--border); border-radius: 8px; margin: 8px 0; padding: 0 12px; }
+  details.table-drop[open] { padding-bottom: 10px; }
+  details.table-drop summary { cursor: pointer; list-style: none; padding: 9px 0; font-size: 11.5px; font-weight: 700; color: var(--text); display: flex; align-items: center; justify-content: space-between; }
+  details.table-drop summary::-webkit-details-marker { display: none; }
+  details.table-drop summary::after { content: "▾"; color: var(--text-faint); font-size: 10px; transition: transform .15s; margin-left: 8px; }
+  details.table-drop[open] summary::after { transform: rotate(180deg); }
+  details.table-drop summary .drop-count { font-weight: 400; color: var(--text-faint); text-transform: none; letter-spacing: 0; margin-left: 6px; font-size: 10.5px; }
+
+  .gridjs-wrapper { background: var(--bg-1) !important; border: none !important; box-shadow: none !important; }
+  .gridjs-table { background: var(--bg-1) !important; color: var(--text) !important; }
+  th.gridjs-th { background: var(--bg-2) !important; color: var(--text-faint) !important; border-color: var(--border) !important; }
+  td.gridjs-td { background: var(--bg-1) !important; color: var(--text) !important; border-color: var(--border-soft) !important; }
+  .gridjs-tr:hover td.gridjs-td { background: var(--bg-2) !important; }
+  .gridjs-footer { background: var(--bg-1) !important; border-color: var(--border) !important; }
+  .gridjs-pagination { color: var(--text-dim) !important; }
+  .gridjs-pagination button { background: var(--bg-2) !important; color: var(--text-dim) !important; border-color: var(--border) !important; }
+  .gridjs-pagination button:hover:not([disabled]) { background: var(--bg-3) !important; }
+  .gridjs-pagination button:disabled { opacity: .4; }
+  .gridjs-search-input { background: var(--bg-2) !important; color: var(--text) !important; border-color: var(--border) !important; }
+  .gridjs-input::placeholder { color: var(--text-faint); }
+  .gridjs-summary { color: var(--text-faint) !important; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<h1>AI Infra Summit 2026 — Pre-Event Account Brief <button class="info-icon-btn" onclick="toggleInfoPopover('mainInfoBanner')" title="What is this page?">?</button></h1>
+<div class="subtitle">Source: live Salesforce + HubSpot sync (<b>clockwork-sfdc-sync-aiinfra26</b>) &middot; auto-refreshes every 6 hours &middot; <span id="loadedAt"></span></div>
+
+<div class="banner" id="mainInfoBanner" style="display:none;">A standalone, sales-facing view of the AI Infra Summit 2026 attendee roster cross-referenced against Salesforce ABM tiers, open pipeline, and HubSpot engagement — the same live data as the Pre-Event Analysis tab on the full internal dashboard, on its own page.</div>
+
+<div id="preEventContent"></div>
+
+<div class="footnote">
+  <span class="methodology-wrap">
+    <b>Methodology</b> <span class="info-icon-btn" title="Hover for methodology details">?</span>
+    <div class="methodology-tooltip">
+      &bull; <b>Pre-Event Analysis</b>: cross-references the uploaded AI Infra Summit 2026 attendee/speaker roster (209 companies, 280 people) against a live, uncapped pull of every ABM-tiered Salesforce Account, matched by normalized company name (punctuation and common legal suffixes stripped) — not domain, since the roster has none. "Open Opportunity" = not a Closed stage, Type not renewal-like, Close Date in the current calendar year; this is a best-effort reproduction of a typical open-pipeline filter, not a guaranteed match to any specific saved report. "Event Family" lightly groups a few known raw Campaign Names (RAISE 2025/2026, PyTorch 2025, Webinars) — a hand-maintained pattern list, not a Salesforce field. Company-name matching is inherently fuzzier than domain-based matching — treat unmatched companies as a starting point for manual review, not a definitive gap list.<br/>
+      &bull; <b>Pipeline default value is $200,000</b> per account with no real open Opportunity.<br/>
+      &bull; Data refreshes automatically every 6 hours via the clockwork-sfdc-sync-aiinfra26 GitHub Action; re-open this page to see the latest snapshot as of load time.<br/>
+      &bull; <b>Attendee Warmth</b>: cross-references attending accounts against a portal-wide HubSpot Marketing Qualified Account (MQA) rollup, joined by the real Salesforce Account Id. A Company is an MQA once at least one associated Contact has reached HubSpot lifecyclestage Marketing Qualified Lead or later. "Qualified Since" / "Last Activity" come from each account's single best (highest-stage) HubSpot contact — a live check of this portal found ~98% of MQL+ contacts have no tracked marketing engagement (no form conversions, source = Offline), so these dates are the closest reliable "is anyone engaging with this account" signal available, not a marketing-attribution trail.
+    </div>
+  </span>
+</div>
+
+</div>
+
+<script>
+const REPO_OWNER = 'sanjeevchris77';
+const REPO_NAME = 'clockwork-sfdc-sync-aiinfra26';
+const REPO_BRANCH = 'main';
+const RAW_BASE = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${REPO_BRANCH}/`;
+
+const charts = {};
+
+function toggleInfoPopover(id) {
+  const el = document.getElementById(id);
+  el.style.display = (el.style.display === 'none' || !el.style.display) ? 'block' : 'none';
+}
+
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function fmtMoney(n) {
+  n = Number(n) || 0;
+  return '$' + n.toLocaleString('en-US');
+}
+function fmtDate(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return isNaN(d) ? '—' : d.toLocaleDateString();
+}
+function sfdcLinkCell(link) {
+  return link ? gridjs.html('<a href="' + esc(link) + '" target="_blank" rel="noopener" style="color:var(--blue)">Open</a>') : '—';
+}
+
+async function fetchJson(path) {
+  const res = await fetch(RAW_BASE + path, { cache: 'no-store' });
+  if (!res.ok) throw new Error(path + ': HTTP ' + res.status);
+  return res.json();
+}
+
+function countBy(rows, fn) {
+  const m = {};
+  rows.forEach(r => { const v = fn(r) || 'Unknown'; m[v] = (m[v] || 0) + 1; });
+  return m;
+}
+
+const PALETTE = ['#abbed9','#d1cae7','#83b7a4','#ccb886','#e1bbbb','#7dd3fc','#f0abfc','#86efac','#fcd34d','#fca5a5'];
+
+function renderPieChart(canvasId, counts) {
+  const ctx = document.getElementById(canvasId);
+  if (!ctx) return;
+  const labels = Object.keys(counts).sort((a,b) => counts[b]-counts[a]);
+  if (charts[canvasId]) charts[canvasId].destroy();
+  if (!labels.length) {
+    ctx.getContext('2d').clearRect(0,0,ctx.width,ctx.height);
+    ctx.parentElement.insertAdjacentHTML('beforeend', '<div class="chart-empty" data-for="' + canvasId + '">No data yet.</div>');
+    return;
+  }
+  charts[canvasId] = new Chart(ctx, {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data: labels.map(l => counts[l]), backgroundColor: labels.map((_,i)=>PALETTE[i % PALETTE.length]) }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: '#9aa2af', boxWidth: 10, font: { size: 9.5 } } } } }
+  });
+}
+
+function renderGroupedBarChart(canvasId, labels, datasets) {
+  const ctx = document.getElementById(canvasId);
+  if (!ctx) return;
+  if (charts[canvasId]) charts[canvasId].destroy();
+  if (!labels.length) {
+    ctx.parentElement.insertAdjacentHTML('beforeend', '<div class="chart-empty" data-for="' + canvasId + '">No data yet.</div>');
+    return;
+  }
+  charts[canvasId] = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets },
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: '#9aa2af', boxWidth: 10, font: { size: 9.5 } } } },
+      scales: { y: { beginAtZero: true, ticks: { color: '#9aa2af', precision: 0 }, grid: { color: '#23262d' } }, x: { ticks: { color: '#9aa2af' }, grid: { display: false } } } }
+  });
+}
+
+function extractSfdcAccountId(link) {
+  if (!link) return null;
+  const m = /\/Account\/([a-zA-Z0-9]+)\/view/.exec(link);
+  return m ? m[1] : null;
+}
+
+function renderPreEventAnalysis(data, hubspotData) {
+  const s = data.summary || {};
+  const accounts = data.accounts || [];
+  const unmatched = data.unmatched_companies || [];
+  const opps = data.opportunities || [];
+  const tierOrder = ['Tier 1', 'Tier 2', 'Tier 3', 'Tier 4', 'Untiered'];
+  const tierBreakdown = s.tier_breakdown || {};
+  const tierLabels = tierOrder.filter(t => tierBreakdown[t]);
+  const sourceAttribution = s.source_attribution || {};
+  const sourceLabels = Object.keys(sourceAttribution).sort((a, b) => sourceAttribution[b].opportunities - sourceAttribution[a].opportunities);
+  const genDate = data.generated_at ? new Date(data.generated_at).toLocaleString() : '—';
+
+  // --- Attendee Warmth: cross-references attending accounts against the
+  // portal-wide HubSpot MQA rollup, joined by the real Salesforce Account
+  // Id (both sides already resolved to the same Account, so no fuzzy
+  // matching needed here).
+  let warmthHtml = '';
+  let warmthRows = [];
+  if (hubspotData) {
+    const hubspotByAcctId = {};
+    (hubspotData.companies || []).forEach(c => { if (c.sfdc_account_id) hubspotByAcctId[c.sfdc_account_id] = c; });
+    let matchedToHubspot = 0, warmCount = 0;
+    accounts.forEach(a => {
+      const acctId = extractSfdcAccountId(a.account_sfdc_link);
+      const hc = acctId ? hubspotByAcctId[acctId] : null;
+      if (hc) {
+        matchedToHubspot++;
+        if (hc.is_mqa) warmCount++;
+        warmthRows.push({ account: a, hubspot: hc });
+      }
+    });
+    warmthRows.sort((x, y) => (y.hubspot.is_mqa - x.hubspot.is_mqa) || (y.hubspot.mql_plus_contact_count - x.hubspot.mql_plus_contact_count));
+    const warmPct = matchedToHubspot ? Math.round((warmCount / matchedToHubspot) * 100) : 0;
+    warmthHtml = `
+      <h2 class="section">Attendee Warmth <button class="info-icon-btn" onclick="toggleInfoPopover('warmthInfoBanner')" title="How is this computed?">?</button></h2>
+      <div class="banner" id="warmthInfoBanner" style="display:none;">Portal-wide HubSpot engagement — shows how warm attending accounts already are in HubSpot walking in, independent of any booth-scan activity at this event. Joined by real Salesforce Account Id. "Qualified Since" / "Last Activity" come from each account's single best (highest-stage) HubSpot contact.</div>
+      <div class="kpi-row">
+        <div class="kpi-card"><div class="name">Attending Accounts Matched to HubSpot</div><div class="stat-value">${matchedToHubspot}</div><div class="stat-sub">of ${accounts.length} tiered attending accounts</div></div>
+        <div class="kpi-card"><div class="name">Already Marketing Qualified (HubSpot)</div><div class="stat-value">${warmCount}</div><div class="stat-sub">at least one contact at MQL+ before the event</div></div>
+        <div class="kpi-card"><div class="name">Warm %</div><div class="stat-value">${warmPct}%</div><div class="stat-sub">of matched attending accounts</div></div>
+      </div>
+      <details class="table-drop">
+        <summary>Which attending accounts are warm <span class="drop-count">— ${matchedToHubspot} account${matchedToHubspot===1?'':'s'} matched to HubSpot</span></summary>
+        <div id="warmthGrid"></div>
+      </details>
+    `;
+  } else {
+    warmthHtml = `
+      <h2 class="section">Attendee Warmth</h2>
+      <div class="banner warn">HubSpot data not available yet (data/hubspot_mqa.json) — this card is wired and will populate once the HubSpot sync has run.</div>
+    `;
+  }
+
+  const html = `
+    <div class="subtitle">Attendee/speaker roster (209 companies, 280 people) cross-referenced live against Salesforce ABM tiers &middot; snapshot generated ${esc(genDate)}</div>
+    <div class="kpi-row">
+      <div class="kpi-card"><div class="name">Attending Accounts (Tiered)</div><div class="stat-value">${s.attending_accounts ?? 0}</div><div class="stat-sub">matched to a Salesforce ABM tier</div></div>
+      <div class="kpi-card"><div class="name">Accounts w/ Open Opportunity</div><div class="stat-value">${s.accounts_with_open_opportunity ?? 0}</div><div class="stat-sub">${s.attending_accounts ? Math.round((s.accounts_with_open_opportunity / s.attending_accounts) * 100) : 0}% of attending accounts</div></div>
+      <div class="kpi-card"><div class="name">Open Pipeline (Attending Accounts)</div><div class="stat-value">${fmtMoney(s.open_pipeline_total)}</div><div class="stat-sub">real open Opportunity amounts</div></div>
+      <div class="kpi-card"><div class="name">Opps Tied to Named Campaign</div><div class="stat-value">${s.opportunities_tied_to_named_campaign ?? 0}</div><div class="stat-sub">of the open opportunities above</div></div>
+    </div>
+    ${warmthHtml}
+    <div class="charts-row">
+      <div class="chart-card"><h3>Attending accounts by ABM tier</h3><div class="hint">Accounts, and how many carry an open opportunity</div><div class="chart-wrap"><canvas id="preTierChart"></canvas></div></div>
+      <div class="chart-card"><h3>Open pipeline by ABM tier</h3><div class="hint">Sum of real open Opportunity amounts</div><div class="chart-wrap"><canvas id="preTierPipelineChart"></canvas></div></div>
+      <div class="chart-card"><h3>Opportunity source attribution</h3><div class="hint">Original Lead Source of each open opportunity</div><div class="chart-wrap pie-wrap"><canvas id="preSourceChart"></canvas></div></div>
+    </div>
+
+    <details class="table-drop" open>
+      <summary>Tier mapping — all attending accounts <span class="drop-count">— ${accounts.length} account${accounts.length===1?'':'s'}</span></summary>
+      <div id="preAccountGrid"></div>
+    </details>
+
+    <details class="table-drop">
+      <summary>Opportunity source &amp; campaign attribution <span class="drop-count">— ${opps.length} open opportunit${opps.length===1?'y':'ies'}</span></summary>
+      <div id="preOppGrid"></div>
+    </details>
+
+    <details class="table-drop">
+      <summary>Attending companies with no ABM tier match <span class="drop-count">— ${unmatched.length} compan${unmatched.length===1?'y':'ies'}</span></summary>
+      <div id="preUnmatchedGrid"></div>
+    </details>
+  `;
+  document.getElementById('preEventContent').innerHTML = html;
+
+  if (warmthRows.length) {
+    new gridjs.Grid({
+      columns: ['Account', 'ABM Tier', 'Owner', 'Warm?', 'HubSpot Stage', 'MQL+ Contacts',
+        'Qualified Since', 'Best Contact', 'Last Activity', 'Account (SFDC)'],
+      data: warmthRows.map(({ account: a, hubspot: hc }) => [
+        a.company, a.tier, a.owner, hc.is_mqa ? 'Yes' : 'No', hc.highest_lifecyclestage,
+        hc.mql_plus_contact_count, fmtDate(hc.qualified_since),
+        hc.best_contact_name || '—', fmtDate(hc.last_activity_date),
+        sfdcLinkCell(a.account_sfdc_link),
+      ]),
+      search: true, sort: true, resizable: true, pagination: { limit: 25 },
+      style: { table: { 'font-size': '11px' } },
+    }).render(document.getElementById('warmthGrid'));
+  }
+
+  renderGroupedBarChart('preTierChart', tierLabels, [
+    { label: 'Accounts', data: tierLabels.map(t => tierBreakdown[t].accounts || 0), backgroundColor: '#abbed9' },
+    { label: 'With Open Opp', data: tierLabels.map(t => tierBreakdown[t].accounts_with_opp || 0), backgroundColor: '#83b7a4' },
+  ]);
+  renderGroupedBarChart('preTierPipelineChart', tierLabels, [
+    { label: 'Open Pipeline ($)', data: tierLabels.map(t => tierBreakdown[t].open_pipeline || 0), backgroundColor: '#ccb886' },
+  ]);
+  renderPieChart('preSourceChart', Object.fromEntries(sourceLabels.map(l => [l, sourceAttribution[l].opportunities])));
+
+  if (accounts.length) {
+    new gridjs.Grid({
+      columns: ['ABM Tier', 'Account', 'Owner', 'GPU Segment', 'Industry', 'Target Account', 'ICP Fit',
+        'Has Open Opp', 'Stage', 'Amount', 'Best Contact', 'Account (SFDC)', 'Opportunity (SFDC)'],
+      data: accounts.map(a => [a.tier, a.company, a.owner, a.gpu_segment, a.industry,
+        a.target_account ? 'Yes' : 'No', a.icp_account, a.has_open_opportunity ? 'Yes' : 'No',
+        a.stage, a.amount != null ? fmtMoney(a.amount) : '—', a.best_contact || '—',
+        sfdcLinkCell(a.account_sfdc_link), sfdcLinkCell(a.sfdc_link)]),
+      search: true, sort: true, resizable: true, pagination: { limit: 25 },
+      style: { table: { 'font-size': '11px' } },
+    }).render(document.getElementById('preAccountGrid'));
+  } else {
+    document.getElementById('preAccountGrid').innerHTML = '<div class="chart-empty" style="height:60px;">No matched accounts yet.</div>';
+  }
+
+  if (opps.length) {
+    new gridjs.Grid({
+      columns: ['Account', 'ABM Tier', 'Owner', 'Opportunity', 'Stage', 'Amount', 'Close Date',
+        'Lead Source', 'Primary Campaign (raw)', 'Event Family', 'Salesforce'],
+      data: opps.map(o => [o.account, o.tier, o.owner, o.opportunity_name, o.stage, fmtMoney(o.amount),
+        o.close_date, o.lead_source, o.primary_campaign_raw || '—', o.event_family || '—', sfdcLinkCell(o.sfdc_link)]),
+      search: true, sort: true, resizable: true, pagination: { limit: 25 },
+      style: { table: { 'font-size': '11px' } },
+    }).render(document.getElementById('preOppGrid'));
+  } else {
+    document.getElementById('preOppGrid').innerHTML = '<div class="chart-empty" style="height:60px;">No open opportunities matched yet.</div>';
+  }
+
+  if (unmatched.length) {
+    new gridjs.Grid({
+      columns: ['Company', 'Attendees', 'Attendee Names'],
+      data: unmatched.map(u => [u.company, u.attendee_count, (u.attendees || []).map(p => p.name).join(', ')]),
+      search: true, sort: true, resizable: true, pagination: { limit: 25 },
+      style: { table: { 'font-size': '11px' } },
+    }).render(document.getElementById('preUnmatchedGrid'));
+  } else {
+    document.getElementById('preUnmatchedGrid').innerHTML = '<div class="chart-empty" style="height:60px;">Every attending company matched.</div>';
+  }
+}
+
+async function init() {
+  const hubspotPromise = fetchJson('data/hubspot_mqa.json').catch(err => {
+    console.warn('HubSpot MQA data unavailable:', err);
+    return null;
+  });
+  try {
+    const preEvent = await fetchJson('data/pre_event_analysis.json');
+    const hubspotData = await hubspotPromise;
+    renderPreEventAnalysis(preEvent, hubspotData);
+    document.getElementById('loadedAt').textContent = 'loaded ' + new Date().toLocaleString();
+  } catch (err) {
+    console.error(err);
+    document.getElementById('preEventContent').innerHTML =
+      '<div class="banner warn">Pre-event analysis data not available yet (data/pre_event_analysis.json). This is wired and will populate once the sync workflow finishes running.</div>';
+  }
+}
+
+init();
+</script>
+</body>
+</html>
