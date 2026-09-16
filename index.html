@@ -110,7 +110,7 @@
 <div class="page">
 
 <h1>AI Infra Summit 2026 — ABX Engagement Dashboard <button class="info-icon-btn" onclick="toggleInfoPopover('mainInfoBanner')" title="What is this dashboard?">?</button></h1>
-<div class="subtitle">Source: live Salesforce sync (<b>clockwork-sfdc-sync-aiinfra26</b>) &middot; campaign <a href="https://clockworksystems.lightning.force.com/lightning/r/Campaign/701TV00000tqIKgYAM/view" target="_blank" rel="noopener" style="color:var(--blue)">701TV00000tqIKgYAM</a> &middot; auto-refreshes every 6 hours &middot; <span id="loadedAt"></span></div>
+<div class="subtitle">Source: live Salesforce sync (<b>clockwork-sfdc-sync-aiinfra26</b>) &middot; campaigns <a href="https://clockworksystems.lightning.force.com/lightning/r/Campaign/701TV00000tqIKgYAM/view" target="_blank" rel="noopener" style="color:var(--blue)">701TV00000tqIKgYAM</a>, <a href="https://clockworksystems.lightning.force.com/lightning/r/Campaign/701TV00000tqT6JYAU/view" target="_blank" rel="noopener" style="color:var(--blue)">701TV00000tqT6JYAU</a> &amp; <a href="https://clockworksystems.lightning.force.com/lightning/r/Campaign/701TV00000tqTXjYAM/view" target="_blank" rel="noopener" style="color:var(--blue)">701TV00000tqTXjYAM</a> &middot; auto-refreshes every 6 hours &middot; <span id="loadedAt"></span></div>
 
 <div class="banner" id="mainInfoBanner" style="display:none;">Live data pulled directly from Salesforce via a scheduled GitHub Action (clockwork-sfdc-sync-aiinfra26). Three tabs: Pre-Event Analysis (attendee roster cross-referenced against ABM tiers + open pipeline, ahead of the event), Event &amp; Post-Event (live booth-scan funnel, once Leads start flowing in from the campaign), and Account Engagement / HubSpot (portal-wide Marketing Qualified Account rollup from HubSpot contact activity, joined to Salesforce ABM tiers).</div>
 
@@ -702,7 +702,7 @@ async function initEventPost() {
 
     if (!leads.length) {
       document.getElementById('dataBanner').innerHTML =
-        '<div class="banner warn">No leads or opportunities have synced yet for campaign 701TV00000tqIKgYAM — this dashboard is wired and ready, and will populate automatically once the sync (every 6h) starts returning real records.</div>';
+        '<div class="banner warn">No leads or opportunities have synced yet for campaigns 701TV00000tqIKgYAM, 701TV00000tqT6JYAU & 701TV00000tqTXjYAM — this dashboard is wired and ready, and will populate automatically once the sync (every 6h) starts returning real records.</div>';
     }
 
     renderKpis(meta || {}, accounts || []);
