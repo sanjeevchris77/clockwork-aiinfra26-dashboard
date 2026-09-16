@@ -211,12 +211,13 @@
   <div class="subtitle">Every booth-scan lead's assigned AE, Salesforce link, and pipeline stage &middot; <span id="aeLoadedAt"></span></div>
   <div id="aeDataBanner"></div>
 
-  <h2 class="section">Persona &amp; Opportunity Lifecycle Funnel</h2>
-  <div class="section-sub" id="funnelSub">Ordered Leads &rarr; MEL &rarr; MQL &rarr; SAL &rarr; real Opportunity stages; bar width = share of the largest stage. Click a stage to filter the table below.</div>
-  <div class="funnel-wrap" id="combinedFunnel"></div>
-
-  <div class="charts-row">
-    <div class="chart-card" style="max-width:420px;">
+  <div class="charts-row" style="align-items:flex-start;">
+    <div class="chart-card" style="flex: 3 1 520px;">
+      <h3>Persona &amp; Opportunity Lifecycle Funnel</h3>
+      <div class="hint" id="funnelSub">Ordered Leads &rarr; MEL &rarr; MQL &rarr; SAL &rarr; real Opportunity stages; bar width = share of the largest stage. Click a stage to filter the table below.</div>
+      <div class="funnel-wrap" id="combinedFunnel"></div>
+    </div>
+    <div class="chart-card" style="flex: 1 1 280px;">
       <h3>Sourced vs. Influenced Opportunities</h3>
       <div class="hint" id="donutSub">Active (non-Closed-Lost) rep-owned Opportunities only. Click a slice to filter the table below.</div>
       <div class="chart-wrap pie-wrap"><canvas id="sourcedInfluencedChart"></canvas></div>
