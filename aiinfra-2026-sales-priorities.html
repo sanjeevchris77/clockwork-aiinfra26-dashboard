@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <title>AI Infra Summit 2026 — Sales Priorities</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridjs@5.0.2/dist/theme/mermaid.min.css" integrity="sha384-jZvDSsmGB9oGGT/4l9bHXGoAv1OxvG/cFmSo0dZaSqmBgvQTKDBFAMftlXTmMbNW" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/gridjs@5.0.2/dist/gridjs.umd.js" integrity="sha384-/XXDzxe4FsGiAe50i/u9pY/Vy/uX654MHB1xoc1BJNnH1WXHhqHga9g3q5tF4gj7" crossorigin="anonymous"></script>
 <style>
   :root {
@@ -60,6 +61,20 @@
   .tab-btn.active { color: var(--text); border-bottom-color: var(--blue); }
 
   .chart-empty { display: flex; align-items: center; justify-content: center; height: 60px; color: var(--text-faint); font-size: 10.5px; }
+
+  .charts-row { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .chart-card { flex: 1; min-width: 230px; background: var(--bg-1); border: 1px solid var(--border); border-radius: 8px; padding: 9px 11px; }
+  .chart-card h3 { font-size: 10px; margin: 0 0 1px 0; color: var(--text); font-weight: 600; }
+  .chart-card .hint { font-size: 8.5px; color: var(--text-faint); margin-bottom: 5px; }
+  .chart-wrap { position: relative; height: 170px; }
+  .chart-wrap.pie-wrap { height: 220px; }
+  .chart-wrap .chart-empty { height: 100%; }
+
+  /* Persona & Opportunity lifecycle funnel */
+  .funnel-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 0 10px 0; }
+  .funnel-row { height: 30px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 11.5px; font-weight: 600; border-radius: 4px; white-space: nowrap; }
+  .funnel-row .funnel-count { margin-left: 6px; font-weight: 700; }
+  .funnel-row .funnel-pct { margin-left: 5px; font-weight: 400; opacity: .85; font-size: 10px; }
 
   .report-select {
     background: var(--bg-1); color: var(--text); border: 1px solid var(--border);
@@ -190,6 +205,20 @@
 <div class="tab-panel" id="tab-aePipeline" style="display:none;">
 
   <div class="subtitle">Every booth-scan lead's assigned AE and pipeline stage, and the related contacts &middot; <span id="aeLoadedAt"></span></div>
+  <div id="aeDataBanner"></div>
+
+  <div class="charts-row">
+    <div class="chart-card" style="flex: 3 1 520px;">
+      <h3>Persona &amp; Opportunity Lifecycle Funnel</h3>
+      <div class="hint" id="funnelSub">Ordered Leads &rarr; MEL &rarr; MQL &rarr; SAL &rarr; real Opportunity stages; bar width = share of the largest stage.</div>
+      <div class="funnel-wrap" id="combinedFunnel"></div>
+    </div>
+    <div class="chart-card" style="flex: 1 1 280px;">
+      <h3>Sourced vs. Influenced Opportunities</h3>
+      <div class="hint">Active (non-Closed-Lost) rep-owned Opportunities only.</div>
+      <div class="chart-wrap pie-wrap"><canvas id="sourcedInfluencedChart"></canvas></div>
+    </div>
+  </div>
 
   <h2 class="section">Leads</h2>
   <div class="section-sub">Who the lead is, what stage they're in, who owns them, and a link to Salesforce.</div>
@@ -219,6 +248,7 @@ const REPO_NAME = 'clockwork-sfdc-sync-aiinfra26';
 const REPO_BRANCH = 'main';
 const RAW_BASE = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${REPO_BRANCH}/`;
 const SFDC_LIGHTNING_DOMAIN = 'https://clockworksystems.lightning.force.com';
+const EVENT_START_DATE = '2026-09-15';
 
 // Reps physically on-site at this event -- update by hand per event. Used
 // to flag, per account, whether its Salesforce owner is the one who can act
@@ -400,6 +430,150 @@ async function initPriorities() {
 }
 
 // ---------------------------------------------------------------------
+// Booth Leads & AE Pipeline tab -- funnel + donut (display-only, sourced
+// from data/leads.json + data/opportunities.json -- independent of the
+// Leads / Contacts report dropdowns below)
+// ---------------------------------------------------------------------
+
+const PIPELINE_COLORS = {
+  'Leads': '#3b4252',
+  'In Progress (MEL)': '#3a4a63',
+  'In Progress (MQL)': '#2c5c7a',
+  'In Progress (SAL)': '#1f6f5c',
+};
+const PIPELINE_FALLBACK_COLORS = ['#c99a6a', '#c2ac5c', '#a99bd0', '#6fae9e', '#c090ab', '#8fbf8f', '#c17d7d'];
+function pipelineColorFor(stage, idx) {
+  if (PIPELINE_COLORS[stage]) return PIPELINE_COLORS[stage];
+  const low = stage.toLowerCase();
+  if (low.includes('won')) return '#8fbf8f';
+  if (low.includes('lost')) return '#c17d7d';
+  return PIPELINE_FALLBACK_COLORS[idx % PIPELINE_FALLBACK_COLORS.length];
+}
+
+// Real Salesforce Lead Status varies (e.g. "In Progress (MEL)") or falls
+// back to a heuristic label ("Marketing Engaged Lead") when Status isn't
+// set -- see classify_lifecycle() in sync_salesforce.py. Normalize both to
+// the same funnel row so the stage taxonomy stays stable regardless of
+// which path produced it.
+function normalizeLeadStage(stage) {
+  if (!stage) return 'Unknown';
+  const s = stage.toLowerCase();
+  if (s.includes('(sal)')) return 'In Progress (SAL)';
+  if (s.includes('(mql)')) return 'In Progress (MQL)';
+  if (s.includes('(mel)')) return 'In Progress (MEL)';
+  if (s === 'marketing qualified lead') return 'In Progress (MQL)';
+  if (s === 'marketing engaged lead') return 'In Progress (MEL)';
+  return stage;
+}
+
+// Opportunity StageName values are whatever this org's real Salesforce
+// pipeline uses -- not hardcoded here. Numbered stages ("00 - Prospecting",
+// "01 - Qualified", ...) sort naturally by their own text; Won/Lost are
+// pinned to the end regardless of exact wording.
+function compareOppStage(a, b) {
+  const rank = s => {
+    const low = s.toLowerCase();
+    if (/^\d\d\s*-/.test(s)) return 0;
+    if (low.includes('won')) return 1;
+    if (low.includes('lost')) return 2;
+    return -1;
+  };
+  const ra = rank(a), rb = rank(b);
+  if (ra !== rb) return ra - rb;
+  return a.localeCompare(b);
+}
+
+function renderCombinedFunnel(entries) {
+  // entries: [[label, count], ...] in FIXED display order (not sorted by
+  // size) -- Leads first as the 100% baseline, then MEL/MQL/SAL, then real
+  // Opportunity stages in pipeline order.
+  const el = document.getElementById('combinedFunnel');
+  el.innerHTML = '';
+  if (!entries.length) { el.innerHTML = '<div class="chart-empty">No data yet.</div>'; return; }
+  const total = entries[0][1] || 1;
+  const maxCount = Math.max(...entries.map(([, c]) => c), 1);
+  entries.forEach(([stage, count], idx) => {
+    const pct = total ? Math.round((count / total) * 100) : 0;
+    const widthPct = Math.round(32 + (count / maxCount) * 60);
+    const row = document.createElement('div');
+    row.className = 'funnel-row';
+    row.style.width = widthPct + '%';
+    row.style.background = pipelineColorFor(stage, idx);
+    row.innerHTML = esc(stage) + ' <span class="funnel-count">' + count + '</span><span class="funnel-pct">(' + pct + '% of ' + total + ')</span>';
+    el.appendChild(row);
+  });
+}
+
+let sourcedInfluencedChart = null;
+function renderSourcedInfluencedChart(counts) {
+  const ctx = document.getElementById('sourcedInfluencedChart');
+  if (sourcedInfluencedChart) sourcedInfluencedChart.destroy();
+  const labels = ['Sourced', 'Influenced'].filter(l => counts[l]);
+  if (!labels.length) {
+    ctx.parentElement.insertAdjacentHTML('beforeend', '<div class="chart-empty">No active opportunities yet.</div>');
+    return;
+  }
+  sourcedInfluencedChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{ data: labels.map(l => counts[l]), backgroundColor: labels.map(l => l === 'Sourced' ? '#83b7a4' : '#abbed9') }],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'right', labels: { color: '#9aa2af', boxWidth: 10, font: { size: 9.5 } } } },
+    },
+  });
+}
+
+async function initAePipelineCharts() {
+  try {
+    const [leads, opps] = await Promise.all([
+      fetchJson('data/leads.json'),
+      fetchJson('data/opportunities.json'),
+    ]);
+
+    // Funnel: Leads -> MEL -> MQL -> SAL -> real Opportunity stages, all
+    // sourced on/after the event start date (genuinely new post-event
+    // pipeline, not pre-existing deals that happen to match by domain).
+    const total = leads.length;
+    const melCount = leads.filter(l => normalizeLeadStage(l.lifecycle_stage) === 'In Progress (MEL)').length;
+    const mqlCount = leads.filter(l => normalizeLeadStage(l.lifecycle_stage) === 'In Progress (MQL)').length;
+    const salCount = leads.filter(l => normalizeLeadStage(l.lifecycle_stage) === 'In Progress (SAL)').length;
+
+    const postEventOpps = opps.filter(o => o.created_date && o.created_date.slice(0, 10) >= EVENT_START_DATE);
+    const oppStageCounts = {};
+    postEventOpps.forEach(o => {
+      const stage = o.stage || 'Unknown';
+      oppStageCounts[stage] = (oppStageCounts[stage] || 0) + 1;
+    });
+    const oppStageEntries = Object.keys(oppStageCounts).sort(compareOppStage).map(s => [s, oppStageCounts[s]]);
+
+    const entries = [
+      ['Leads', total],
+      ['In Progress (MEL)', melCount],
+      ['In Progress (MQL)', mqlCount],
+      ['In Progress (SAL)', salCount],
+      ...oppStageEntries,
+    ];
+    renderCombinedFunnel(entries);
+    document.getElementById('funnelSub').textContent =
+      `Ordered Leads → MEL → MQL → SAL → real Opportunity stages; bar width = share of the largest stage. Opportunity rows are Salesforce Opportunities created on/after ${EVENT_START_DATE} only — pre-existing deals are excluded.`;
+
+    // Donut: Sourced (created on/after event start) vs Influenced (created
+    // before), among active (non-Closed-Lost) rep-owned Opportunities.
+    const activeOpps = opps.filter(o => !/lost/i.test(o.stage || ''));
+    const sourcedCount = activeOpps.filter(o => o.created_date && o.created_date.slice(0, 10) >= EVENT_START_DATE).length;
+    const influencedCount = activeOpps.length - sourcedCount;
+    renderSourcedInfluencedChart({ Sourced: sourcedCount, Influenced: influencedCount });
+  } catch (err) {
+    console.error(err);
+    document.getElementById('aeDataBanner').innerHTML =
+      '<div class="banner warn">Funnel / donut data not available yet: ' + esc(err.message) + '</div>';
+  }
+}
+
+// ---------------------------------------------------------------------
 // Booth Leads & AE Pipeline tab -- Leads / Contacts dropdowns
 // ---------------------------------------------------------------------
 
@@ -526,6 +700,7 @@ function initReportDropdown(selectId, gridId, reportIds) {
 }
 
 function initAePipeline() {
+  initAePipelineCharts();
   initReportDropdown('aeReportSelect', 'aeReportGrid', AE_PIPELINE_REPORT_IDS);
   initReportDropdown('contactReportSelect', 'contactReportGrid', CONTACT_REPORT_IDS);
   document.getElementById('aeLoadedAt').textContent = 'loaded ' + new Date().toLocaleString();
