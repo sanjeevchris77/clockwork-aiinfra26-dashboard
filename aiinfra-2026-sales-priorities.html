@@ -4,7 +4,6 @@
 <meta charset="UTF-8" />
 <title>AI Infra Summit 2026 — Sales Priorities</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridjs@5.0.2/dist/theme/mermaid.min.css" integrity="sha384-jZvDSsmGB9oGGT/4l9bHXGoAv1OxvG/cFmSo0dZaSqmBgvQTKDBFAMftlXTmMbNW" crossorigin="anonymous">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/gridjs@5.0.2/dist/gridjs.umd.js" integrity="sha384-/XXDzxe4FsGiAe50i/u9pY/Vy/uX654MHB1xoc1BJNnH1WXHhqHga9g3q5tF4gj7" crossorigin="anonymous"></script>
 <style>
   :root {
@@ -60,25 +59,7 @@
   .tab-btn:hover { color: var(--text-dim); }
   .tab-btn.active { color: var(--text); border-bottom-color: var(--blue); }
 
-  /* Funnel (Persona & Opportunity lifecycle) */
-  .funnel-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 0 10px 0; }
-  .funnel-row { height: 30px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 11.5px; font-weight: 600; border-radius: 4px; white-space: nowrap; cursor: pointer; transition: opacity .1s ease; }
-  .funnel-row:hover { opacity: .85; }
-  .funnel-row.dimmed { opacity: .35; }
-  .funnel-row .funnel-count { margin-left: 6px; font-weight: 700; }
-  .funnel-row .funnel-pct { margin-left: 5px; font-weight: 400; opacity: .85; font-size: 10px; }
-
-  .charts-row { display: flex; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
-  .chart-card { flex: 1; min-width: 230px; background: var(--bg-1); border: 1px solid var(--border); border-radius: 8px; padding: 9px 11px; }
-  .chart-card h3 { font-size: 10px; margin: 0 0 1px 0; color: var(--text); font-weight: 600; }
-  .chart-card .hint { font-size: 8.5px; color: var(--text-faint); margin-bottom: 5px; }
-  .chart-wrap { position: relative; height: 170px; }
-  .chart-wrap.pie-wrap { height: 220px; }
-  .chart-empty { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-faint); font-size: 10.5px; }
-
-  .filter-note { font-weight: 400; color: var(--text-faint); font-size: 10px; margin-left: 6px; }
-  .clear-filter-btn { background: var(--bg-2); border: 1px solid var(--border); color: var(--text-dim); font-size: 10px; border-radius: 999px; padding: 2px 9px; cursor: pointer; margin-left: 8px; }
-  .clear-filter-btn:hover { background: var(--bg-3); color: var(--text); }
+  .chart-empty { display: flex; align-items: center; justify-content: center; height: 60px; color: var(--text-faint); font-size: 10.5px; }
 
   .report-select {
     background: var(--bg-1); color: var(--text); border: 1px solid var(--border);
@@ -208,47 +189,24 @@
 
 <div class="tab-panel" id="tab-aePipeline" style="display:none;">
 
-  <div class="subtitle">Every booth-scan lead's assigned AE, Salesforce link, and pipeline stage &middot; <span id="aeLoadedAt"></span></div>
-  <div id="aeDataBanner"></div>
+  <div class="subtitle">Every booth-scan lead's assigned AE and pipeline stage, and the related contacts &middot; <span id="aeLoadedAt"></span></div>
 
-  <div class="charts-row" style="align-items:flex-start;">
-    <div class="chart-card" style="flex: 3 1 520px;">
-      <h3>Persona &amp; Opportunity Lifecycle Funnel</h3>
-      <div class="hint" id="funnelSub">Ordered Leads &rarr; MEL &rarr; MQL &rarr; SAL &rarr; real Opportunity stages; bar width = share of the largest stage. Click a stage to filter the table below.</div>
-      <div class="funnel-wrap" id="combinedFunnel"></div>
-    </div>
-    <div class="chart-card" style="flex: 1 1 280px;">
-      <h3>Sourced vs. Influenced Opportunities</h3>
-      <div class="hint" id="donutSub">Active (non-Closed-Lost) rep-owned Opportunities only. Click a slice to filter the table below.</div>
-      <div class="chart-wrap pie-wrap"><canvas id="sourcedInfluencedChart"></canvas></div>
-    </div>
-  </div>
-
-  <details class="table-drop" id="funnelDetail" open>
-    <summary>
-      Leads &amp; Opportunities
-      <span class="count-badge" id="funnelDetailCount">—</span>
-      <span class="filter-note" id="funnelFilterNote"></span>
-    </summary>
-    <div id="funnelGrid"></div>
-  </details>
-
-  <h2 class="section">AE / Pipeline Reports</h2>
-  <div class="section-sub">Raw Salesforce reports tracking each AE's assigned booth leads and pipeline stage. Columns come directly from each report as saved in Salesforce.</div>
+  <h2 class="section">Leads</h2>
+  <div class="section-sub">Who the lead is, what stage they're in, who owns them, and a link to Salesforce.</div>
   <div style="margin-bottom:10px;">
     <select id="aeReportSelect" class="report-select"></select>
   </div>
   <div id="aeReportGrid"></div>
 
   <h2 class="section">Contacts</h2>
-  <div class="section-sub">Raw Salesforce contact reports for booth-scan accounts. Columns come directly from each report as saved in Salesforce.</div>
+  <div class="section-sub">Same format, for booth-scan contacts.</div>
   <div style="margin-bottom:10px;">
     <select id="contactReportSelect" class="report-select"></select>
   </div>
   <div id="contactReportGrid"></div>
 
   <div class="footnote">
-    The 8 tables above are raw Salesforce Reports (Analytics REST API), rendered generically — headers and columns are whatever each report defines in Salesforce, not hardcoded here. A "Salesforce" column is added when a row's underlying data includes a record Id, linking straight to that record.
+    Each table is distilled from a raw Salesforce report down to Name, Stage, Owner, and Company (linked to Salesforce) by matching each report's own column labels -- e.g. any column labeled "Owner" becomes the Owner field, regardless of that report's exact layout. If a report has no column matching one of these fields, that cell shows "—".
   </div>
 
 </div>
@@ -261,7 +219,6 @@ const REPO_NAME = 'clockwork-sfdc-sync-aiinfra26';
 const REPO_BRANCH = 'main';
 const RAW_BASE = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${REPO_BRANCH}/`;
 const SFDC_LIGHTNING_DOMAIN = 'https://clockworksystems.lightning.force.com';
-const EVENT_START_DATE = '2026-09-15';
 
 // Reps physically on-site at this event -- update by hand per event. Used
 // to flag, per account, whether its Salesforce owner is the one who can act
@@ -271,10 +228,9 @@ const EVENT_ATTENDING_REPS = ['Greg Mark'];
 
 // The 4 ad-hoc "AE assigned per booth lead" reports and the 4 ad-hoc contact
 // reports named for this dashboard -- raw Salesforce Reports (Analytics REST
-// API), fetched non-fatally by the sync workflow (see AD_HOC_REPORT_IDs /
+// API), fetched non-fatally by the sync workflow (see
 // ae_pipeline_report_ids / contact_report_ids in events/aiinfra26/config.json)
-// and written to data/report_<id>.json. Rendered generically below since
-// their exact columns live in Salesforce, not in this page.
+// and written to data/report_<id>.json.
 const AE_PIPELINE_REPORT_IDS = [
   '00OTV00000TXHz42AH',
   '00OTV00000TXatd2AD',
@@ -444,253 +400,18 @@ async function initPriorities() {
 }
 
 // ---------------------------------------------------------------------
-// Booth Leads & AE Pipeline tab
-// ---------------------------------------------------------------------
-
-const PIPELINE_COLORS = {
-  'Leads': '#3b4252',
-  'In Progress (MEL)': '#3a4a63',
-  'In Progress (MQL)': '#2c5c7a',
-  'In Progress (SAL)': '#1f6f5c',
-};
-const PIPELINE_FALLBACK_COLORS = ['#c99a6a', '#c2ac5c', '#a99bd0', '#6fae9e', '#c090ab', '#8fbf8f', '#c17d7d'];
-function pipelineColorFor(stage, idx) {
-  if (PIPELINE_COLORS[stage]) return PIPELINE_COLORS[stage];
-  const low = stage.toLowerCase();
-  if (low.includes('won')) return '#8fbf8f';
-  if (low.includes('lost')) return '#c17d7d';
-  return PIPELINE_FALLBACK_COLORS[idx % PIPELINE_FALLBACK_COLORS.length];
-}
-
-// Real Salesforce Lead Status varies (e.g. "In Progress (MEL)") or falls
-// back to a heuristic label ("Marketing Engaged Lead") when Status isn't
-// set -- see classify_lifecycle() in sync_salesforce.py. Normalize both to
-// the same funnel row so the stage taxonomy stays stable regardless of
-// which path produced it.
-function normalizeLeadStage(stage) {
-  if (!stage) return 'Unknown';
-  const s = stage.toLowerCase();
-  if (s.includes('(sal)')) return 'In Progress (SAL)';
-  if (s.includes('(mql)')) return 'In Progress (MQL)';
-  if (s.includes('(mel)')) return 'In Progress (MEL)';
-  if (s === 'marketing qualified lead') return 'In Progress (MQL)';
-  if (s === 'marketing engaged lead') return 'In Progress (MEL)';
-  return stage;
-}
-
-// Opportunity StageName values are whatever this org's real Salesforce
-// pipeline uses -- not hardcoded here. Numbered stages ("00 - Prospecting",
-// "01 - Qualified", ...) sort naturally by their own text; Won/Lost are
-// pinned to the end regardless of exact wording.
-function compareOppStage(a, b) {
-  const rank = s => {
-    const low = s.toLowerCase();
-    if (/^\d\d\s*-/.test(s)) return 0;
-    if (low.includes('won')) return 1;
-    if (low.includes('lost')) return 2;
-    return -1;
-  };
-  const ra = rank(a), rb = rank(b);
-  if (ra !== rb) return ra - rb;
-  return a.localeCompare(b);
-}
-
-let funnelRowsAll = [];
-let funnelFilter = null; // { type: 'stage' | 'sourced', value: string }
-
-function buildFunnelRows(leads, opps) {
-  const rows = [];
-  leads.forEach(l => {
-    rows.push({
-      type: 'Lead',
-      name: `${l.first_name || ''} ${l.last_name || ''}`.trim() || l.company || '—',
-      company: l.company || '—',
-      owner: l.owner || '—',
-      stage: l.lifecycle_stage || 'Unknown',
-      normalizedStage: normalizeLeadStage(l.lifecycle_stage),
-      created: null,
-      sourced: null,
-      sfdc_link: l.sfdc_link,
-    });
-  });
-  opps.forEach(o => {
-    const isSourced = o.created_date && o.created_date.slice(0, 10) >= EVENT_START_DATE;
-    rows.push({
-      type: 'Opportunity',
-      name: o.account || '—',
-      company: o.account || '—',
-      owner: o.owner || '—',
-      stage: o.stage || 'Unknown',
-      normalizedStage: o.stage || 'Unknown',
-      created: o.created_date,
-      sourced: isSourced ? 'Sourced' : 'Influenced',
-      sfdc_link: o.sfdc_link,
-    });
-  });
-  return rows;
-}
-
-function renderFunnelGrid(rows) {
-  const el = document.getElementById('funnelGrid');
-  document.getElementById('funnelDetailCount').textContent = rows.length;
-  if (!rows.length) {
-    el.innerHTML = '<div class="chart-empty" style="height:60px;">No leads or opportunities yet.</div>';
-    return;
-  }
-  new gridjs.Grid({
-    columns: ['Type', 'Name / Account', 'Owner (AE)', 'Stage', 'Created Date', 'Salesforce'],
-    data: rows.map(r => [r.type, r.name, r.owner, r.stage, fmtDate(r.created), sfdcLinkCell(r.sfdc_link)]),
-    search: true, sort: true, resizable: true, pagination: { limit: 25 },
-    style: { table: { 'font-size': '11px' } },
-  }).render(el);
-}
-
-function applyFunnelFilter() {
-  let rows = funnelRowsAll;
-  let note = '';
-  if (funnelFilter) {
-    if (funnelFilter.type === 'stage') {
-      rows = rows.filter(r => r.normalizedStage === funnelFilter.value);
-      note = `filtered to "${funnelFilter.value}"`;
-    } else if (funnelFilter.type === 'sourced') {
-      rows = rows.filter(r => r.sourced === funnelFilter.value);
-      note = `filtered to "${funnelFilter.value}"`;
-    }
-  }
-  document.getElementById('funnelFilterNote').innerHTML = funnelFilter
-    ? esc(note) + ' <span class="clear-filter-btn" onclick="event.stopPropagation(); clearFunnelFilter();">Clear</span>'
-    : '';
-  renderFunnelGrid(rows);
-}
-
-function clearFunnelFilter() {
-  funnelFilter = null;
-  document.querySelectorAll('#combinedFunnel .funnel-row').forEach(r => r.classList.remove('dimmed'));
-  applyFunnelFilter();
-}
-
-function renderCombinedFunnel(entries) {
-  // entries: [[label, count], ...] in FIXED display order (not sorted by
-  // size) -- Leads first as the 100% baseline, then MEL/MQL/SAL, then real
-  // Opportunity stages in pipeline order.
-  const el = document.getElementById('combinedFunnel');
-  el.innerHTML = '';
-  if (!entries.length) { el.innerHTML = '<div class="chart-empty">No data yet.</div>'; return; }
-  const total = entries[0][1] || 1;
-  const maxCount = Math.max(...entries.map(([, c]) => c), 1);
-  entries.forEach(([stage, count], idx) => {
-    const pct = total ? Math.round((count / total) * 100) : 0;
-    const widthPct = Math.round(32 + (count / maxCount) * 60);
-    const row = document.createElement('div');
-    row.className = 'funnel-row';
-    row.style.width = widthPct + '%';
-    row.style.background = pipelineColorFor(stage, idx);
-    row.innerHTML = esc(stage) + ' <span class="funnel-count">' + count + '</span><span class="funnel-pct">(' + pct + '% of ' + total + ')</span>';
-    row.onclick = () => {
-      const isSame = funnelFilter && funnelFilter.type === 'stage' && funnelFilter.value === stage;
-      document.querySelectorAll('#combinedFunnel .funnel-row').forEach(r => r.classList.remove('dimmed'));
-      if (isSame) {
-        funnelFilter = null;
-      } else {
-        funnelFilter = { type: 'stage', value: stage };
-        document.querySelectorAll('#combinedFunnel .funnel-row').forEach(r => { if (r !== row) r.classList.add('dimmed'); });
-      }
-      applyFunnelFilter();
-    };
-    el.appendChild(row);
-  });
-}
-
-let sourcedInfluencedChart = null;
-function renderSourcedInfluencedChart(counts) {
-  const ctx = document.getElementById('sourcedInfluencedChart');
-  if (sourcedInfluencedChart) sourcedInfluencedChart.destroy();
-  const labels = ['Sourced', 'Influenced'].filter(l => counts[l]);
-  if (!labels.length) {
-    ctx.parentElement.insertAdjacentHTML('beforeend', '<div class="chart-empty" data-for="sourcedInfluencedChart">No active opportunities yet.</div>');
-    return;
-  }
-  sourcedInfluencedChart = new Chart(ctx, {
-    type: 'doughnut',
-    data: {
-      labels,
-      datasets: [{ data: labels.map(l => counts[l]), backgroundColor: labels.map(l => l === 'Sourced' ? '#83b7a4' : '#abbed9') }],
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { position: 'right', labels: { color: '#9aa2af', boxWidth: 10, font: { size: 9.5 } } } },
-      onClick: (evt, elements) => {
-        if (!elements.length) return;
-        const label = labels[elements[0].index];
-        funnelFilter = (funnelFilter && funnelFilter.type === 'sourced' && funnelFilter.value === label) ? null : { type: 'sourced', value: label };
-        document.querySelectorAll('#combinedFunnel .funnel-row').forEach(r => r.classList.remove('dimmed'));
-        applyFunnelFilter();
-      },
-    },
-  });
-}
-
-async function initAePipelineCharts() {
-  try {
-    const [leads, opps] = await Promise.all([
-      fetchJson('data/leads.json'),
-      fetchJson('data/opportunities.json'),
-    ]);
-
-    // Funnel: Leads -> MEL -> MQL -> SAL -> real Opportunity stages, all
-    // sourced on/after the event start date (genuinely new post-event
-    // pipeline, not pre-existing deals that happen to match by domain).
-    const total = leads.length;
-    const melCount = leads.filter(l => normalizeLeadStage(l.lifecycle_stage) === 'In Progress (MEL)').length;
-    const mqlCount = leads.filter(l => normalizeLeadStage(l.lifecycle_stage) === 'In Progress (MQL)').length;
-    const salCount = leads.filter(l => normalizeLeadStage(l.lifecycle_stage) === 'In Progress (SAL)').length;
-
-    const postEventOpps = opps.filter(o => o.created_date && o.created_date.slice(0, 10) >= EVENT_START_DATE);
-    const oppStageCounts = {};
-    postEventOpps.forEach(o => {
-      const stage = o.stage || 'Unknown';
-      oppStageCounts[stage] = (oppStageCounts[stage] || 0) + 1;
-    });
-    const oppStageEntries = Object.keys(oppStageCounts).sort(compareOppStage).map(s => [s, oppStageCounts[s]]);
-
-    const entries = [
-      ['Leads', total],
-      ['In Progress (MEL)', melCount],
-      ['In Progress (MQL)', mqlCount],
-      ['In Progress (SAL)', salCount],
-      ...oppStageEntries,
-    ];
-    renderCombinedFunnel(entries);
-    document.getElementById('funnelSub').textContent =
-      `Ordered Leads → MEL → MQL → SAL → real Opportunity stages; bar width = share of the largest stage. Opportunity rows are Salesforce Opportunities created on/after ${EVENT_START_DATE} only — pre-existing deals are excluded. Click a stage to filter the table below.`;
-
-    // Donut: Sourced (created on/after event start) vs Influenced (created
-    // before), among active (non-Closed-Lost) rep-owned Opportunities.
-    const activeOpps = opps.filter(o => !/lost/i.test(o.stage || ''));
-    const sourcedCount = activeOpps.filter(o => o.created_date && o.created_date.slice(0, 10) >= EVENT_START_DATE).length;
-    const influencedCount = activeOpps.length - sourcedCount;
-    renderSourcedInfluencedChart({ Sourced: sourcedCount, Influenced: influencedCount });
-
-    funnelRowsAll = buildFunnelRows(leads, opps);
-    applyFunnelFilter();
-
-    document.getElementById('aeLoadedAt').textContent = 'loaded ' + new Date().toLocaleString();
-  } catch (err) {
-    console.error(err);
-    document.getElementById('aeDataBanner').innerHTML =
-      '<div class="banner warn">Funnel / donut data not available yet: ' + esc(err.message) + '</div>';
-  }
-}
-
-// ---------------------------------------------------------------------
-// Generic Salesforce tabular-report rendering (AE/pipeline + Contacts
-// dropdowns). Columns and labels come entirely from each report's own
-// Reports REST API metadata -- nothing about specific fields is hardcoded
-// here, since these reports' exact shape isn't known ahead of time.
+// Booth Leads & AE Pipeline tab -- Leads / Contacts dropdowns
 // ---------------------------------------------------------------------
 
 const SFDC_ID_RE = /^[a-zA-Z0-9]{15,18}$/;
 
+// Parses a raw Salesforce Reports REST API (tabular/summary format) response
+// into plain column labels + row values, using the report's own metadata --
+// nothing about specific fields is hardcoded, since each report's exact
+// shape isn't known ahead of time. Also detects a record Id hiding in a
+// cell's raw (pre-formatted) value, which Salesforce's tabular report API
+// carries for reference-type columns (e.g. a Name column's raw value is
+// often the record's Id, while its label is the display name).
 function parseSalesforceTabularReport(report) {
   const meta = (report && report.reportMetadata) || {};
   const ext = (report && report.reportExtendedMetadata) || {};
@@ -699,7 +420,7 @@ function parseSalesforceTabularReport(report) {
   const fm = (report && report.factMap) || {};
   const sourceRows = (fm['T!T'] && fm['T!T'].rows) || [];
 
-  const columns = columnKeys.map(key => (colInfo[key] && colInfo[key].label) || key);
+  const labels = columnKeys.map(key => (colInfo[key] && colInfo[key].label) || key);
 
   const rows = sourceRows.map(r => {
     const cells = r.dataCells || [];
@@ -715,19 +436,57 @@ function parseSalesforceTabularReport(report) {
     return { values, link };
   });
 
-  return { columns, rows, reportName: meta.name || null };
+  return { labels, rows, reportName: meta.name || null };
 }
 
-function renderGenericReportTable(elId, parsed) {
+// Picks the first column (by index) whose Salesforce label contains one of
+// the given keywords, skipping any column a previous field already claimed
+// (so "Account Name" and "Lead Name" don't both grab a generic "name" match).
+function pickColumn(labels, used, keywords) {
+  for (const kw of keywords) {
+    const idx = labels.findIndex((l, i) => !used.has(i) && l.toLowerCase().includes(kw));
+    if (idx !== -1) { used.add(idx); return idx; }
+  }
+  return -1;
+}
+
+// Distills a raw report down to just the 4 fields this tab needs: who the
+// record is, what stage/status it's in, who owns it, and the company
+// (linked to Salesforce when a record Id was detected on that row) --
+// regardless of the report's exact column names/order, which vary per
+// report and aren't hardcoded here. A field with no matching column shows
+// "—" rather than guessing.
+function buildMinimalRows(parsed) {
+  const used = new Set();
+  const companyIdx = pickColumn(parsed.labels, used, ['company', 'account']);
+  const ownerIdx = pickColumn(parsed.labels, used, ['owner']);
+  const stageIdx = pickColumn(parsed.labels, used, ['stage', 'status']);
+  const nameIdx = pickColumn(parsed.labels, used, ['full name', 'contact name', 'lead name', 'name']);
+
+  return parsed.rows.map(r => ({
+    name: nameIdx !== -1 ? r.values[nameIdx] : '—',
+    stage: stageIdx !== -1 ? r.values[stageIdx] : '—',
+    owner: ownerIdx !== -1 ? r.values[ownerIdx] : '—',
+    company: companyIdx !== -1 ? r.values[companyIdx] : '—',
+    link: r.link,
+  }));
+}
+
+function companyCell(company, link) {
+  if (!link || company === '—') return esc(company);
+  return gridjs.html('<a href="' + esc(link) + '" target="_blank" rel="noopener" style="color:var(--blue)">' + esc(company) + '</a>');
+}
+
+function renderMinimalReportTable(elId, parsed) {
   const el = document.getElementById(elId);
   if (!parsed || !parsed.rows.length) {
-    el.innerHTML = '<div class="chart-empty" style="height:60px;">No rows in this report yet.</div>';
+    el.innerHTML = '<div class="chart-empty">No rows in this report yet.</div>';
     return;
   }
-  const columns = [...parsed.columns, 'Salesforce'];
+  const rows = buildMinimalRows(parsed);
   new gridjs.Grid({
-    columns,
-    data: parsed.rows.map(r => [...r.values, sfdcLinkCell(r.link)]),
+    columns: ['Name', 'Stage', 'Owner', 'Company'],
+    data: rows.map(r => [r.name, r.stage, r.owner, companyCell(r.company, r.link)]),
     search: true, sort: true, resizable: true, pagination: { limit: 25 },
     style: { table: { 'font-size': '11px' } },
   }).render(el);
@@ -744,14 +503,14 @@ function initReportDropdown(selectId, gridId, reportIds) {
   const cache = {};
   async function loadReport(id) {
     const el = document.getElementById(gridId);
-    el.innerHTML = '<div class="chart-empty" style="height:60px;">Loading…</div>';
+    el.innerHTML = '<div class="chart-empty">Loading…</div>';
     try {
       if (!cache[id]) {
         const raw = await fetchJson('data/report_' + id + '.json');
         cache[id] = parseSalesforceTabularReport(raw);
       }
       const parsed = cache[id];
-      renderGenericReportTable(gridId, parsed);
+      renderMinimalReportTable(gridId, parsed);
       if (parsed.reportName) {
         const opt = select.querySelector(`option[value="${id}"]`);
         if (opt) opt.textContent = `${parsed.reportName} (${id})`;
@@ -767,9 +526,9 @@ function initReportDropdown(selectId, gridId, reportIds) {
 }
 
 function initAePipeline() {
-  initAePipelineCharts();
   initReportDropdown('aeReportSelect', 'aeReportGrid', AE_PIPELINE_REPORT_IDS);
   initReportDropdown('contactReportSelect', 'contactReportGrid', CONTACT_REPORT_IDS);
+  document.getElementById('aeLoadedAt').textContent = 'loaded ' + new Date().toLocaleString();
 }
 
 initPriorities();
