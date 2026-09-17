@@ -274,6 +274,23 @@ const CONTACT_REPORT_IDS = [
   '00OTV00000TXbUj2AL',
 ];
 
+// Each id above is one AE's report (confirmed against each report's own
+// Salesforce name, e.g. "2026 AI Infra Summit Campaign leads-Greg") --
+// mapped explicitly here so the dropdown can show the AE's name instead of
+// a raw report id or Salesforce report title.
+const AE_PIPELINE_AE_NAMES = {
+  '00OTV00000TXHz42AH': 'Greg',
+  '00OTV00000TXatd2AD': 'Joe',
+  '00OTV00000TXaIY2A1': 'Sean',
+  '00OTV00000TXTvO2AX': 'Chris',
+};
+const CONTACT_AE_NAMES = {
+  '00OTV00000TXbJR2A1': 'Greg',
+  '00OTV00000TXbOH2A1': 'Sean',
+  '00OTV00000TXbRV2A1': 'Chris',
+  '00OTV00000TXbUj2AL': 'Joe',
+};
+
 function esc(s) {
   return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
@@ -632,18 +649,35 @@ function pickColumn(labels, used, keywords) {
 // "—" rather than guessing.
 function buildMinimalRows(parsed) {
   const used = new Set();
-  const companyIdx = pickColumn(parsed.labels, used, ['company', 'account']);
+  const companyIdx = pickColumn(parsed.labels, used, ['account name', 'company']);
   const ownerIdx = pickColumn(parsed.labels, used, ['owner']);
-  const stageIdx = pickColumn(parsed.labels, used, ['stage', 'status']);
-  const nameIdx = pickColumn(parsed.labels, used, ['full name', 'contact name', 'lead name', 'name']);
+  const stageIdx = pickColumn(parsed.labels, used, ['lifecycle stage', 'stage', 'status']);
+  // Prefer combining First Name + Last Name when both/either exist -- these
+  // reports have no single "Name" column, and a generic 'name' keyword match
+  // would otherwise grab "Campaign Name" (it also contains the substring
+  // "name" and sits earlier in the column list than First/Last Name).
+  const firstIdx = pickColumn(parsed.labels, used, ['first name']);
+  const lastIdx = pickColumn(parsed.labels, used, ['last name']);
+  const nameIdx = (firstIdx === -1 && lastIdx === -1)
+    ? pickColumn(parsed.labels, used, ['full name', 'contact name', 'lead name'])
+    : -1;
 
-  return parsed.rows.map(r => ({
-    name: nameIdx !== -1 ? r.values[nameIdx] : '—',
-    stage: stageIdx !== -1 ? r.values[stageIdx] : '—',
-    owner: ownerIdx !== -1 ? r.values[ownerIdx] : '—',
-    company: companyIdx !== -1 ? r.values[companyIdx] : '—',
-    link: r.link,
-  }));
+  return parsed.rows.map(r => {
+    let name = '—';
+    if (firstIdx !== -1 || lastIdx !== -1) {
+      name = [firstIdx !== -1 ? r.values[firstIdx] : '', lastIdx !== -1 ? r.values[lastIdx] : '']
+        .join(' ').trim() || '—';
+    } else if (nameIdx !== -1) {
+      name = r.values[nameIdx];
+    }
+    return {
+      name,
+      stage: stageIdx !== -1 ? r.values[stageIdx] : '—',
+      owner: ownerIdx !== -1 ? r.values[ownerIdx] : '—',
+      company: companyIdx !== -1 ? r.values[companyIdx] : '—',
+      link: r.link,
+    };
+  });
 }
 
 function companyCell(company, link) {
@@ -653,6 +687,10 @@ function companyCell(company, link) {
 
 function renderMinimalReportTable(elId, parsed) {
   const el = document.getElementById(elId);
+  // gridjs.Grid#render() requires an empty container -- it silently refuses
+  // (logs "container element is not empty" and leaves existing content, e.g.
+  // "Loading…", on screen forever) if we don't clear it first.
+  el.innerHTML = '';
   if (!parsed || !parsed.rows.length) {
     el.innerHTML = '<div class="chart-empty">No rows in this report yet.</div>';
     return;
@@ -666,13 +704,14 @@ function renderMinimalReportTable(elId, parsed) {
   }).render(el);
 }
 
-// Populates a <select> with one option per report id, loads the first
-// report by default, and reloads the table whenever the selection changes.
-// Once a report loads, its option label is upgraded from the bare id to the
-// report's actual Salesforce name for readability.
-function initReportDropdown(selectId, gridId, reportIds) {
+// Populates a <select> with one option per report id -- labeled with that
+// report's AE name (aeNames), not the raw id or Salesforce report title --
+// loads the first report by default, and reloads the table whenever the
+// selection changes. Once a report loads, its option label gets a row count
+// appended (e.g. "Greg (106)") so you can see which AEs actually have data.
+function initReportDropdown(selectId, gridId, reportIds, aeNames) {
   const select = document.getElementById(selectId);
-  select.innerHTML = reportIds.map(id => `<option value="${esc(id)}">${esc(id)}</option>`).join('');
+  select.innerHTML = reportIds.map(id => `<option value="${esc(id)}">${esc(aeNames[id] || id)}</option>`).join('');
 
   const cache = {};
   async function loadReport(id) {
@@ -685,10 +724,8 @@ function initReportDropdown(selectId, gridId, reportIds) {
       }
       const parsed = cache[id];
       renderMinimalReportTable(gridId, parsed);
-      if (parsed.reportName) {
-        const opt = select.querySelector(`option[value="${id}"]`);
-        if (opt) opt.textContent = `${parsed.reportName} (${id})`;
-      }
+      const opt = select.querySelector(`option[value="${id}"]`);
+      if (opt) opt.textContent = `${aeNames[id] || id} (${parsed.rows.length})`;
     } catch (err) {
       console.warn(`Report ${id} unavailable:`, err);
       el.innerHTML = '<div class="banner warn">Report data not available yet (data/report_' + esc(id) + '.json). This is wired and will populate once the sync workflow fetches this report.</div>';
@@ -701,8 +738,8 @@ function initReportDropdown(selectId, gridId, reportIds) {
 
 function initAePipeline() {
   initAePipelineCharts();
-  initReportDropdown('aeReportSelect', 'aeReportGrid', AE_PIPELINE_REPORT_IDS);
-  initReportDropdown('contactReportSelect', 'contactReportGrid', CONTACT_REPORT_IDS);
+  initReportDropdown('aeReportSelect', 'aeReportGrid', AE_PIPELINE_REPORT_IDS, AE_PIPELINE_AE_NAMES);
+  initReportDropdown('contactReportSelect', 'contactReportGrid', CONTACT_REPORT_IDS, CONTACT_AE_NAMES);
   document.getElementById('aeLoadedAt').textContent = 'loaded ' + new Date().toLocaleString();
 }
 
