@@ -160,7 +160,8 @@
 <div class="subtitle">209 companies attending &middot; <span id="loadedAt"></span></div>
 
 <div class="tab-nav">
-  <button class="tab-btn active" data-tab="priorities" onclick="showTab('priorities')">Sales Priorities</button>
+  <button class="tab-btn active" data-tab="priorities" onclick="showTab('priorities')">Pre-Event Sales Priority</button>
+  <button class="tab-btn" data-tab="postEvent" onclick="showTab('postEvent')">Post-event Sales Priority</button>
   <button class="tab-btn" data-tab="aePipeline" onclick="showTab('aePipeline')">Booth Leads &amp; AE Pipeline</button>
 </div>
 
@@ -198,6 +199,43 @@
 
 <div class="footnote">
   15 accounts have an open Salesforce opportunity (17 total open opportunities across them — 2 accounts have more than one). Priority 2 and 3 are sized to not repeat any account already in Priority 1. Priority 2/3 show a trimmed column set (no Tier / Target Account / ICP Fit / Amount); Stage there also shows a HubSpot lifecycle stage alongside the Salesforce one when HubSpot has a match. GPU Segment / Industry / Best Contact / SFDC links are blank for Priority 3 accounts — they have no matching Salesforce Account yet, which is exactly why they're "cold."
+</div>
+
+</div>
+
+<div class="tab-panel" id="tab-postEvent" style="display:none;">
+
+<div class="banner">Post-event view: everyone who is a Salesforce Campaign Member of this event's 3 tracked campaigns, rolled up by account. Priority here reflects what's happened <b>since</b> the event -- an open opportunity, or real engagement -- not the pre-event attendee roster.</div>
+
+<div class="kpi-row">
+  <div class="kpi-card p1"><div class="name">Priority 1 — Open Opportunities</div><div class="stat-value" id="postP1Count">—</div><div class="stat-sub">accounts with a real deal already in motion</div></div>
+  <div class="kpi-card"><div class="name">Priority 2 — Engaged / Qualified</div><div class="stat-value" id="postP2Count">—</div><div class="stat-sub">no open deal yet, but a real signal since the event</div></div>
+  <div class="kpi-card p3"><div class="name">Priority 3 — Cold</div><div class="stat-value" id="postP3Count">—</div><div class="stat-sub">campaign member, no other signal yet</div></div>
+</div>
+
+<h2 class="section">Priority 1 — Open Opportunities</h2>
+<div class="section-sub">Highest priority. These accounts already have a real, open deal in Salesforce.</div>
+<details class="table-drop">
+  <summary>View accounts <span class="count-badge" id="postP1SummaryCount">—</span></summary>
+  <div id="postP1Grid"></div>
+</details>
+
+<h2 class="section">Priority 2 — Engaged / Qualified</h2>
+<div class="section-sub">Second priority. No open deal yet, but the account is already engaged (an existing Contact, Opportunity or Lead) or has a persona who's progressed past initial lead stage.</div>
+<details class="table-drop">
+  <summary>View accounts <span class="count-badge" id="postP2SummaryCount">—</span></summary>
+  <div id="postP2Grid"></div>
+</details>
+
+<h2 class="section">Priority 3 — Cold</h2>
+<div class="section-sub">Third priority. A campaign member at this account, but no other engagement signal yet.</div>
+<details class="table-drop">
+  <summary>View accounts <span class="count-badge" id="postP3SummaryCount">—</span></summary>
+  <div id="postP3Grid"></div>
+</details>
+
+<div class="footnote" id="postEventFootnote">
+  Sourced from data/account_summary.json -- one row per account (matched by website domain) among everyone who is a CampaignMember of this event's 3 tracked campaigns. Priority 1 = has an open Salesforce Opportunity. Priority 2 = no open opportunity, but either already engaged (an existing Contact, Opportunity, or other open Lead at that account predating this event) or a campaign member there has progressed past initial lead stage. Priority 3 = campaign member only, no other signal yet. GPU Segment / Industry / Account (SFDC) are blank for accounts with no matching Salesforce Account.
 </div>
 
 </div>
@@ -323,7 +361,7 @@ function repCell(owner) {
 
 function showTab(name) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
-  ['priorities', 'aePipeline'].forEach(t => {
+  ['priorities', 'postEvent', 'aePipeline'].forEach(t => {
     document.getElementById('tab-' + t).style.display = (t === name) ? '' : 'none';
   });
 }
@@ -570,6 +608,90 @@ async function initPriorities() {
   } catch (err) {
     console.error(err);
     document.querySelector('#tab-priorities').insertAdjacentHTML('beforeend',
+      '<div class="banner warn">Data not available yet: ' + esc(err.message) + '</div>');
+  }
+}
+
+// ---------------------------------------------------------------------
+// Post-event Sales Priority tab -- account_summary.json rolled up by
+// domain from this event's 3 tracked campaigns' CampaignMembers, reusing
+// the same compact column set / row-rendering conventions as Priority 2/3
+// above (see COMPACT_PRIORITY_COLUMNS, multiLinkCell, opportunitiesCell).
+// ---------------------------------------------------------------------
+
+// Every open Salesforce Opportunity already carried on the account_summary
+// row itself (existing_opportunities_all_owners), independent of the
+// pre-event tab's oppsByCompany -- these two tabs source from different
+// underlying pulls (booth-scan-domain Opportunities vs. pre-event-roster
+// Account Opportunities) and aren't guaranteed to overlap.
+function postOpenOpportunitiesCell(a) {
+  const opps = (a.existing_opportunities_all_owners || []).filter(o => o.is_open);
+  return multiLinkCell(opps.map(o => ({
+    label: o.stage ? `${o.account || 'Opportunity'} (${o.stage})` : (o.account || 'Opportunity'),
+    link: o.sfdc_link,
+  })));
+}
+
+function postStageCell(a) {
+  const openOpps = (a.existing_opportunities_all_owners || []).filter(o => o.is_open);
+  if (openOpps.length) {
+    return gridjs.html(openOpps.map(o => esc(o.stage || 'Open')).join('<br>'));
+  }
+  const stages = Object.entries(a.lifecycle_stage_counts || {});
+  if (!stages.length) return 'No Open Opportunity';
+  return gridjs.html(stages.map(([stage, count]) => esc(stage) + (count > 1 ? ` x${count}` : '')).join('<br>'));
+}
+
+function postAttendeesCell(personas) {
+  return multiLinkCell((personas || []).map(p => ({
+    label: p.title ? `${p.name} (${p.title})` : p.name,
+    link: p.sfdc_link,
+  })));
+}
+
+function postEventAccountRow(a) {
+  return [
+    a.company,
+    postAttendeesCell(a.personas),
+    repCell(a.owner),
+    a.gpu_segment || '—',
+    a.industry || '—',
+    postStageCell(a),
+    postAttendeesCell(a.personas),
+    (a.campaigns || []).join(', ') || '—',
+    fmtDate(a.first_touch),
+    fmtDate(a.last_touch),
+    sfdcLinkCell(a.account_sfdc_link),
+    postOpenOpportunitiesCell(a),
+  ];
+}
+
+async function initPostEvent() {
+  try {
+    const summary = await fetchJson('data/account_summary.json');
+
+    const p1 = summary.filter(a => a.has_open_opportunity);
+    const p2 = summary.filter(a => !a.has_open_opportunity && (a.company_already_engaged || a.is_qualified_contact));
+    const p3 = summary.filter(a => !a.has_open_opportunity && !a.company_already_engaged && !a.is_qualified_contact);
+
+    document.getElementById('postP1Count').textContent = p1.length;
+    document.getElementById('postP2Count').textContent = p2.length;
+    document.getElementById('postP3Count').textContent = p3.length;
+    document.getElementById('postP1SummaryCount').textContent = p1.length;
+    document.getElementById('postP2SummaryCount').textContent = p2.length;
+    document.getElementById('postP3SummaryCount').textContent = p3.length;
+
+    renderPriorityGrid('postP1Grid', p1.map(a => postEventAccountRow(a)), COMPACT_PRIORITY_COLUMNS);
+    renderPriorityGrid('postP2Grid', p2.map(a => postEventAccountRow(a)), COMPACT_PRIORITY_COLUMNS);
+    renderPriorityGrid('postP3Grid', p3.map(a => postEventAccountRow(a)), COMPACT_PRIORITY_COLUMNS);
+
+    if (!summary.length) {
+      document.querySelector('#tab-postEvent').insertAdjacentHTML('afterbegin',
+        '<div class="banner warn">No campaign-member data yet -- the sync workflow needs to run at least once against the current campaign_ids in events/aiinfra26/config.json.</div>');
+    }
+  } catch (err) {
+    console.error(err);
+    document.querySelector('#tab-postEvent').insertAdjacentHTML('afterbegin',
       '<div class="banner warn">Data not available yet: ' + esc(err.message) + '</div>');
   }
 }
@@ -880,6 +1002,7 @@ function initAePipeline() {
 }
 
 initPriorities();
+initPostEvent();
 initAePipeline();
 </script>
 </body>
