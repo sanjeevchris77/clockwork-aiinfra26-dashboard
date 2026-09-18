@@ -63,7 +63,7 @@
   .chart-wrap { position: relative; height: 170px; }
   .chart-wrap.pie-wrap { height: 260px; }
   .chart-empty { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-faint); font-size: 10.5px; }
-  #accountGrid, #leadGrid, #oppGrid, #preAccountGrid, #preOppGrid, #preUnmatchedGrid, #hubspotMqaGrid, #warmthGrid { background: var(--bg-1); border-radius: 8px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 6px; }
+  #preAccountGrid, #preOppGrid, #preUnmatchedGrid, #hubspotMqaGrid, #warmthGrid { background: var(--bg-1); border-radius: 8px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 6px; }
   .gridjs-th { font-size: 10.5px; }
   .gridjs-td { font-size: 11px; }
   .footnote { font-size: 10px; color: var(--text-faint); margin-top: 8px; line-height: 1.6; }
@@ -684,20 +684,20 @@ function showKpiDrill(key) {
     distinctCompanies: {
       title: 'Distinct Companies',
       rows: peAccounts,
-      columns: ['Company', 'Already Engaged', 'Has Open Opportunity', 'Booth/Campaign Leads', 'ABM Tier'],
-      mapRow: a => [a.company, a.company_already_engaged, a.has_open_opportunity ? 'Yes' : 'No', a.booth_scan_lead_count, a.abm_tier || '\u2014'],
+      columns: ACCOUNT_DRILL_COLUMNS,
+      mapRow: accountDrillRow,
     },
     netNew: {
       title: 'Net-New Companies',
       rows: peAccounts.filter(a => a.company_already_engaged !== 'Yes'),
-      columns: ['Company', 'Booth/Campaign Leads', 'Has Open Opportunity', 'ABM Tier'],
-      mapRow: a => [a.company, a.booth_scan_lead_count, a.has_open_opportunity ? 'Yes' : 'No', a.abm_tier || '\u2014'],
+      columns: ACCOUNT_DRILL_COLUMNS,
+      mapRow: accountDrillRow,
     },
     alreadyEngaged: {
       title: 'Already-Engaged Accounts',
       rows: peAccounts.filter(a => a.company_already_engaged === 'Yes'),
-      columns: ['Company', 'Booth/Campaign Leads', 'Has Open Opportunity', 'ABM Tier'],
-      mapRow: a => [a.company, a.booth_scan_lead_count, a.has_open_opportunity ? 'Yes' : 'No', a.abm_tier || '\u2014'],
+      columns: ACCOUNT_DRILL_COLUMNS,
+      mapRow: accountDrillRow,
     },
     totalLeads: {
       title: 'Total Leads',
@@ -752,8 +752,8 @@ function renderDrillPanel(def) {
 const LEAD_DRILL_COLUMNS = ['Company', 'First Name', 'Last Name', 'Title', 'Owner', 'Lifecycle Stage', 'Already Engaged'];
 function leadDrillRow(l) { return [l.company, l.first_name, l.last_name, l.title, l.owner, l.lifecycle_stage, l.company_already_engaged]; }
 
-const ACCOUNT_DRILL_COLUMNS = ['Company', 'Booth/Campaign Leads', 'Already Engaged', 'Has Open Opportunity', 'ABM Tier'];
-function accountDrillRow(a) { return [a.company, a.booth_scan_lead_count, a.company_already_engaged, a.has_open_opportunity ? 'Yes' : 'No', a.abm_tier || '\u2014']; }
+const ACCOUNT_DRILL_COLUMNS = ['Company', 'Booth/Campaign Leads', 'Already Engaged', 'Has Open Opportunity', 'Open Pipeline (Real)', 'ABM Tier'];
+function accountDrillRow(a) { return [a.company, a.booth_scan_lead_count, a.company_already_engaged, a.has_open_opportunity ? 'Yes' : 'No', a.potential_pipeline_basis === 'real_open_opportunity' ? fmtMoney(a.potential_pipeline_amount) : '\u2014', a.abm_tier || '\u2014']; }
 
 const OPP_DRILL_COLUMNS = ['Account', 'Owner', 'Amount', 'Stage', 'Origin', 'Created Date', 'Campaign'];
 function oppDrillRow(o) { return [o.account, o.owner, fmtMoney(o.amount), o.stage, o.origin, o.created_date, o.campaign]; }
@@ -779,21 +779,6 @@ function renderCharts(leads, opps, accounts, byRep) {
       <div class="chart-card"><h3>Lead lifecycle stage (bar)</h3><div class="hint">Click a bar for details</div><div class="chart-wrap"><canvas id="lifecycleChart"></canvas></div></div>
       <div class="chart-card"><h3>Account tier mix</h3><div class="hint">Salesforce Account ABM_Tier__c field &middot; click a slice for details</div><div class="chart-wrap pie-wrap"><canvas id="tierChart"></canvas></div></div>
     </div>
-
-    <details class="table-drop" open id="accountTableDrop">
-      <summary>Company-level rollup (breadth) <span class="drop-count">— ${accounts.length} account${accounts.length===1?'':'s'}</span></summary>
-      <div id="accountGrid"></div>
-    </details>
-
-    <details class="table-drop" open>
-      <summary>Person-level detail (depth) <span class="drop-count">— ${leads.length} contact${leads.length===1?'':'s'}</span></summary>
-      <div id="leadGrid"></div>
-    </details>
-
-    <details class="table-drop" id="oppTableDrop">
-      <summary>Opportunities <span class="drop-count">— ${opps.length} rep-owned opportunit${opps.length===1?'y':'ies'}</span></summary>
-      <div id="oppGrid"></div>
-    </details>
   `;
   document.getElementById('mainContent').insertAdjacentHTML('beforeend', html);
 
@@ -840,39 +825,6 @@ function renderCharts(leads, opps, accounts, byRep) {
   renderPieChart('tierChart', countBy(accounts, a => a.abm_tier || 'No tier set'), label => {
     renderDrillPanel({ title: 'Account Tier: ' + label, rows: accounts.filter(a => (a.abm_tier || 'No tier set') === label), columns: ACCOUNT_DRILL_COLUMNS, mapRow: accountDrillRow });
   });
-
-  if (leads.length) {
-    new gridjs.Grid({
-      columns: ['Company', 'First Name', 'Last Name', 'Title', 'Email', 'Owner', 'Lifecycle Stage', 'Already Engaged', 'Lead Source'],
-      data: leads.map(l => [l.company, l.first_name, l.last_name, l.title, l.email, l.owner, l.lifecycle_stage, l.company_already_engaged, l.lead_source]),
-      search: true, sort: true, resizable: true, pagination: { limit: 25 },
-      style: { table: { 'font-size': '11px' } },
-    }).render(document.getElementById('leadGrid'));
-  } else {
-    document.getElementById('leadGrid').innerHTML = '<div class="chart-empty" style="height:60px;">No leads yet.</div>';
-  }
-
-  if (opps.length) {
-    new gridjs.Grid({
-      columns: ['Account', 'Owner', 'Amount', 'Stage', 'Origin', 'Created Date', 'Campaign'],
-      data: opps.map(o => [o.account, o.owner, fmtMoney(o.amount), o.stage, o.origin, o.created_date, o.campaign]),
-      search: true, sort: true, resizable: true, pagination: { limit: 25 },
-      style: { table: { 'font-size': '11px' } },
-    }).render(document.getElementById('oppGrid'));
-  } else {
-    document.getElementById('oppGrid').innerHTML = '<div class="chart-empty" style="height:60px;">No opportunities yet.</div>';
-  }
-
-  if (accounts.length) {
-    new gridjs.Grid({
-      columns: ['Company', 'Booth/Campaign Leads', 'Already Engaged', 'Has Open Opportunity', 'Open Pipeline (Real)', 'ABM Tier'],
-      data: accounts.map(a => [a.company, a.booth_scan_lead_count, a.company_already_engaged, a.has_open_opportunity ? 'Yes' : 'No', a.potential_pipeline_basis === 'real_open_opportunity' ? fmtMoney(a.potential_pipeline_amount) : '—', a.abm_tier || '—']),
-      search: true, sort: true, resizable: true, pagination: { limit: 25 },
-      style: { table: { 'font-size': '11px' } },
-    }).render(document.getElementById('accountGrid'));
-  } else {
-    document.getElementById('accountGrid').innerHTML = '<div class="chart-empty" style="height:60px;">No accounts yet.</div>';
-  }
 }
 
 async function initPreEvent(hubspotDataPromise) {
