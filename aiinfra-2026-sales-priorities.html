@@ -36,7 +36,8 @@
     font-size: 13px;
   }
   .page { max-width: 1280px; margin: 0 auto; }
-  h1 { font-size: 17px; margin: 0 0 2px 0; font-weight: 700; letter-spacing: -.01em; }
+  h1 { font-size: 26px; margin: 0 0 4px 0; font-weight: 800; letter-spacing: -.01em; text-align: center; }
+  h1 .sales-view-tag { font-size: 26px; font-weight: 800; color: var(--green); }
   h2.section { font-size: 14px; margin: 22px 0 4px 0; color: var(--text); font-weight: 700; }
   .section-sub { font-size: 11px; color: var(--text-faint); margin-bottom: 8px; }
   .subtitle { color: var(--text-faint); font-size: 11.5px; margin-bottom: 10px; }
@@ -156,12 +157,12 @@
 <body>
 <div class="page">
 
-<h1>AI Infra Summit 2026 — Sales Priorities</h1>
+<h1>AI Infra Summit 2026 — Sales Priorities <span class="sales-view-tag">(Sales View)</span></h1>
 <div class="subtitle">209 companies attending &middot; <span id="loadedAt"></span></div>
 
 <div class="tab-nav">
-  <button class="tab-btn active" data-tab="priorities" onclick="showTab('priorities')">Pre-Event Sales Priority</button>
-  <button class="tab-btn" data-tab="postEvent" onclick="showTab('postEvent')">Post-event Sales Priority</button>
+  <button class="tab-btn active" data-tab="priorities" onclick="showTab('priorities')">Pre Event</button>
+  <button class="tab-btn" data-tab="postEvent" onclick="showTab('postEvent')">Post Event</button>
   <button class="tab-btn" data-tab="aePipeline" onclick="showTab('aePipeline')">Booth Leads &amp; AE Pipeline</button>
 </div>
 
