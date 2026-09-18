@@ -582,13 +582,21 @@ function renderBarChart(canvasId, counts, label) {
   });
 }
 
-function renderKpis(meta, accounts) {
+function renderKpis(meta, accounts, opps) {
+  // Rep-owned Opportunities counts only OPEN opportunities (owned by the 4
+  // tracked reps, domain-matched to a booth-scan lead) so this KPI row is
+  // consistently "current state" -- meta.opp_count (all rep-owned records,
+  // open AND closed) intentionally isn't used here anymore, since it made
+  // this number include Closed Lost deals with nothing distinguishing them,
+  // which didn't reconcile with anything else on this page or with Priority
+  // 1 on the Sales Priorities dashboard's Post-event tab.
+  const openRepOwnedOpps = (opps || []).filter(o => o.is_open).length;
   const kpis = [
     ['Distinct Companies', meta.distinct_companies ?? 0, 'unique accounts on this campaign'],
     ['Net-New Companies', meta.companies_net_new ?? 0, 'no prior Opportunity, Contact, or open Lead'],
     ['Already-Engaged Accounts', meta.companies_already_engaged ?? 0, 'someone at the company already talking to us'],
     ['Total Leads', meta.lead_count ?? 0, 'across all tracked reps'],
-    ['Rep-owned Opportunities', meta.opp_count ?? 0, 'owned by the 4 tracked reps'],
+    ['Rep-owned Opportunities', openRepOwnedOpps, 'open, owned by the 4 tracked reps'],
     ['Open Pipeline (Real)', fmtMoney(meta.potential_pipeline_real_open_opportunity_total), 'sum of actual open Opportunity amounts -- no $200K estimate included'],
   ];
   document.getElementById('mainContent').insertAdjacentHTML('beforeend',
@@ -705,7 +713,7 @@ async function initEventPost() {
         '<div class="banner warn">No leads or opportunities have synced yet for campaigns 701TV00000tqIKgYAM, 701TV00000tqT6JYAU & 701TV00000tqTXjYAM — this dashboard is wired and ready, and will populate automatically once the sync (every 6h) starts returning real records.</div>';
     }
 
-    renderKpis(meta || {}, accounts || []);
+    renderKpis(meta || {}, accounts || [], opps || []);
     renderCharts(leads || [], opps || [], accounts || [], byRep || {});
 
     try {
