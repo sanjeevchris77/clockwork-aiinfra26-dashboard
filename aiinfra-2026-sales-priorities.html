@@ -197,7 +197,7 @@
 </details>
 
 <div class="footnote">
-  15 accounts have an open Salesforce opportunity (17 total open opportunities across them — 2 accounts have more than one). Priority 2 and 3 are sized to not repeat any account already in Priority 1. GPU Segment / Industry / Target Account / ICP Fit / Stage / Amount / Best Contact / SFDC links are blank for Priority 3 accounts — they have no matching Salesforce Account yet, which is exactly why they're "cold."
+  15 accounts have an open Salesforce opportunity (17 total open opportunities across them — 2 accounts have more than one). Priority 2 and 3 are sized to not repeat any account already in Priority 1. Priority 2/3 show a trimmed column set (no Tier / Target Account / ICP Fit / Amount); Stage there also shows a HubSpot lifecycle stage alongside the Salesforce one when HubSpot has a match. GPU Segment / Industry / Best Contact / SFDC links are blank for Priority 3 accounts — they have no matching Salesforce Account yet, which is exactly why they're "cold."
 </div>
 
 </div>
@@ -367,14 +367,36 @@ const PRIORITY_COLUMNS = [
   { name: 'Opportunity (SFDC)', width: '4%' },
 ];
 
-function renderPriorityGrid(elId, rows) {
+// Priority 2 and 3 use a trimmed-down column set -- Tier, Target Account,
+// ICP Fit, Has Open Opp and Amount aren't shown for these tiers. Stage folds
+// in the HubSpot lifecycle stage, Best Contact lists every matching
+// Salesforce Contact (falling back to the single best_contact field when no
+// Contact record is available), and Opportunity (SFDC) lists every matching
+// Salesforce Opportunity rather than just the one embedded on the account
+// record. Widths sum to 100%.
+const COMPACT_PRIORITY_COLUMNS = [
+  { name: 'Account', width: '8%' },
+  { name: 'Attendee(s)', width: '12%' },
+  { name: 'Owner', width: '9%' },
+  { name: 'GPU Segment', width: '8%' },
+  { name: 'Industry', width: '8%' },
+  { name: 'Stage', width: '11%' },
+  { name: 'Best Contact', width: '12%' },
+  { name: 'Sourced Campaign', width: '7%' },
+  { name: 'First Touch', width: '6%' },
+  { name: 'Last Touch', width: '6%' },
+  { name: 'Account (SFDC)', width: '6%' },
+  { name: 'Opportunity (SFDC)', width: '7%' },
+];
+
+function renderPriorityGrid(elId, rows, columns) {
   const el = document.getElementById(elId);
   if (!rows.length) {
     el.innerHTML = '<div style="padding:16px; color:var(--text-faint); font-size:11px;">No accounts in this list.</div>';
     return;
   }
   new gridjs.Grid({
-    columns: PRIORITY_COLUMNS,
+    columns: columns || PRIORITY_COLUMNS,
     data: rows,
     search: true, sort: true, resizable: false, pagination: { limit: 25 },
     style: { table: { 'font-size': '9.5px' } },
@@ -397,16 +419,134 @@ function accountRow(a, extra) {
   ];
 }
 
+// Priority 2/3 row builder -- see COMPACT_PRIORITY_COLUMNS. `ctx` carries the
+// lookups built once in initPriorities() (HubSpot by account id / by name,
+// Salesforce Contacts by account id, Salesforce Opportunities by company
+// name) so this stays a plain per-row function.
+function multiLinkCell(items) {
+  if (!items.length) return '—';
+  const parts = items.map(({ label, link }) =>
+    link ? `<a href="${esc(link)}" target="_blank" rel="noopener" style="color:var(--blue)">${esc(label)}</a>` : esc(label)
+  );
+  return gridjs.html(parts.join('<br>'));
+}
+
+// The HubSpot company record for this account -- by Salesforce Account Id
+// when there's a match, otherwise a best-effort match on company name
+// (needed for Priority 3, which has no Salesforce Account at all).
+function hcFor(company, accountSfdcLink, ctx) {
+  const acctId = extractSfdcAccountId(accountSfdcLink);
+  return (acctId && ctx.hubspotByAcctId[acctId])
+    || (company && ctx.hubspotByNameLower[company.toLowerCase()])
+    || null;
+}
+
+function stageCell(sfdcStage, hubspotStage) {
+  const parts = [];
+  if (sfdcStage) parts.push(esc(sfdcStage));
+  if (hubspotStage) parts.push('HubSpot: ' + esc(hubspotStage));
+  return parts.length ? gridjs.html(parts.join('<br>')) : '—';
+}
+
+function opportunitiesCell(company, oppsByCompany) {
+  const opps = (company && oppsByCompany[company.toLowerCase()]) || [];
+  return multiLinkCell(opps.map(o => ({
+    label: o.stage ? `${o.opportunity_name || 'Opportunity'} (${o.stage})` : (o.opportunity_name || 'Opportunity'),
+    link: o.sfdc_link,
+  })));
+}
+
+// Every Salesforce Contact on the account, each linked to its own record --
+// sourced from data/contacts.json once the sync produces it (see that
+// file's fetch in initPriorities()); falls back to the single best_contact
+// field this page already carried (no Contact Id, so no link) when no
+// Contact record is available yet for that account.
+function bestContactCell(a, ctx) {
+  const acctId = extractSfdcAccountId(a.account_sfdc_link);
+  const contacts = (acctId && ctx.contactsByAcctId[acctId]) || [];
+  if (contacts.length) {
+    return multiLinkCell(contacts.map(c => ({
+      label: c.title ? `${c.name} (${c.title})` : c.name,
+      link: c.sfdc_link,
+    })));
+  }
+  if (a.best_contact) {
+    return esc(a.best_contact_title ? `${a.best_contact} (${a.best_contact_title})` : a.best_contact);
+  }
+  return '—';
+}
+
+function compactAccountRow(a, ctx) {
+  const hc = hcFor(a.company, a.account_sfdc_link, ctx);
+  return [
+    a.company,
+    attendeesCell(a.attendees),
+    repCell(a.owner),
+    a.gpu_segment || '—',
+    a.industry || '—',
+    stageCell(a.stage, hc ? hc.highest_lifecyclestage : null),
+    bestContactCell(a, ctx),
+    a.event_family || a.primary_campaign || '—',
+    fmtDate(hc ? hc.qualified_since : null),
+    fmtDate(hc ? hc.last_activity_date : null),
+    sfdcLinkCell(a.account_sfdc_link),
+    opportunitiesCell(a.company, ctx.oppsByCompany),
+  ];
+}
+
 async function initPriorities() {
   try {
     const preEvent = await fetchJson('data/pre_event_analysis.json');
+
     let hubspotByAcctId = {};
+    let hubspotByNameLower = {};
     try {
       const hubspotData = await fetchJson('data/hubspot_mqa.json');
-      (hubspotData.companies || []).forEach(c => { if (c.sfdc_account_id) hubspotByAcctId[c.sfdc_account_id] = c; });
+      (hubspotData.companies || []).forEach(c => {
+        if (c.sfdc_account_id) hubspotByAcctId[c.sfdc_account_id] = c;
+        // Priority 3 accounts have no Salesforce Account match, so the only
+        // way to surface their HubSpot lifecycle stage / touch dates is a
+        // best-effort match on company name; prefer a company HubSpot
+        // itself matched to Salesforce over an unmatched one with the same
+        // name.
+        if (c.name) {
+          const key = c.name.toLowerCase();
+          if (!hubspotByNameLower[key] || (!hubspotByNameLower[key].sfdc_matched && c.sfdc_matched)) {
+            hubspotByNameLower[key] = c;
+          }
+        }
+      });
     } catch (e) {
-      console.warn('HubSpot data unavailable, Priority 2 Last Touch will be blank:', e);
+      console.warn('HubSpot data unavailable, Priority 2/3 HubSpot stage and touch dates will be blank:', e);
     }
+
+    // Every Salesforce Contact on an account, keyed by Account Id -- written
+    // by the sync script once it exports data/contacts.json (not there yet
+    // as of this change; fetched non-fatally so Best Contact just falls back
+    // to the single best_contact field this page already had until it is).
+    let contactsByAcctId = {};
+    try {
+      const contactsData = await fetchJson('data/contacts.json');
+      (contactsData.contacts || []).forEach(c => {
+        if (!c.account_id) return;
+        (contactsByAcctId[c.account_id] = contactsByAcctId[c.account_id] || []).push(c);
+      });
+    } catch (e) {
+      console.warn('Contacts data unavailable yet, Best Contact will show the single best contact only:', e);
+    }
+
+    // Every open Salesforce Opportunity, keyed by account/company name, so
+    // Priority 2/3's Opportunity (SFDC) column can list all of an account's
+    // open opportunities rather than just the one embedded on the account
+    // record (relevant for the small number of accounts with more than one).
+    const oppsByCompany = {};
+    (preEvent.opportunities || []).forEach(o => {
+      if (!o.account) return;
+      const key = o.account.toLowerCase();
+      (oppsByCompany[key] = oppsByCompany[key] || []).push(o);
+    });
+
+    const ctx = { hubspotByAcctId, hubspotByNameLower, contactsByAcctId, oppsByCompany };
 
     const accounts = preEvent.accounts || [];
     const unmatched = preEvent.unmatched_companies || [];
@@ -423,20 +563,8 @@ async function initPriorities() {
     document.getElementById('p3SummaryCount').textContent = p3.length;
 
     renderPriorityGrid('p1Grid', p1.map(a => accountRow(a)));
-
-    renderPriorityGrid('p2Grid', p2.map(a => {
-      const acctId = extractSfdcAccountId(a.account_sfdc_link);
-      const hc = acctId ? hubspotByAcctId[acctId] : null;
-      return accountRow(a, {
-        firstTouch: hc ? hc.qualified_since : null,
-        lastTouch: hc ? hc.last_activity_date : null,
-      });
-    }));
-
-    renderPriorityGrid('p3Grid', p3.map(u => [
-      u.company, attendeesCell(u.attendees), repCell(null), 'Net New',
-      '—', '—', '—', '—', '—', '—', '—', '—', '—', '—', '—', '—', '—',
-    ]));
+    renderPriorityGrid('p2Grid', p2.map(a => compactAccountRow(a, ctx)), COMPACT_PRIORITY_COLUMNS);
+    renderPriorityGrid('p3Grid', p3.map(u => compactAccountRow(u, ctx)), COMPACT_PRIORITY_COLUMNS);
 
     document.getElementById('loadedAt').textContent = 'loaded ' + new Date().toLocaleString();
   } catch (err) {
