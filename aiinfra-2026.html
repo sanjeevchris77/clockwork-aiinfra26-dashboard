@@ -120,16 +120,16 @@
 <div class="banner" id="mainInfoBanner" style="display:none;">Live data pulled directly from Salesforce via a scheduled GitHub Action (clockwork-sfdc-sync-aiinfra26). Three tabs: Pre-Event Analysis (attendee roster cross-referenced against ABM tiers + open pipeline, ahead of the event), Post Event (live booth-scan funnel, once Leads start flowing in from the campaign), and Account Engagement / HubSpot (portal-wide Marketing Qualified Account rollup from HubSpot contact activity, joined to Salesforce ABM tiers).</div>
 
 <div class="tab-nav">
-  <button class="tab-btn active" data-tab="preEvent" onclick="showTab('preEvent')">Pre Event</button>
-  <button class="tab-btn" data-tab="eventPost" onclick="showTab('eventPost')">Post Event</button>
+  <button class="tab-btn" data-tab="preEvent" onclick="showTab('preEvent')">Pre Event</button>
+  <button class="tab-btn active" data-tab="eventPost" onclick="showTab('eventPost')">Post Event</button>
   <button class="tab-btn" data-tab="hubspot" onclick="showTab('hubspot')">Account Engagement (HubSpot)</button>
 </div>
 
-<div class="tab-panel" id="tab-preEvent">
+<div class="tab-panel" id="tab-preEvent" style="display:none;">
   <div id="preEventContent"></div>
 </div>
 
-<div class="tab-panel" id="tab-eventPost" style="display:none;">
+<div class="tab-panel" id="tab-eventPost">
   <div id="dataBanner"></div>
   <div id="mainContent"></div>
   <div id="yoyContent"></div>

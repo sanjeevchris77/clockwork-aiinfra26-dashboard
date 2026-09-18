@@ -161,12 +161,12 @@
 <div class="subtitle"><span id="loadedAt"></span></div>
 
 <div class="tab-nav">
-  <button class="tab-btn active" data-tab="priorities" onclick="showTab('priorities')">Pre Event</button>
-  <button class="tab-btn" data-tab="postEvent" onclick="showTab('postEvent')">Post Event</button>
+  <button class="tab-btn" data-tab="priorities" onclick="showTab('priorities')">Pre Event</button>
+  <button class="tab-btn active" data-tab="postEvent" onclick="showTab('postEvent')">Post Event</button>
   <button class="tab-btn" data-tab="aePipeline" onclick="showTab('aePipeline')">Booth Visits</button>
 </div>
 
-<div class="tab-panel" id="tab-priorities">
+<div class="tab-panel" id="tab-priorities" style="display:none;">
 
 <div class="banner">On-site at the event: <b>Greg Mark</b> and <b>Joe</b>. If you own an account below and aren't listed as attending, use your AI Infra "Book a Demo" page and outreach list instead of the event app.</div>
 
@@ -204,7 +204,7 @@
 
 </div>
 
-<div class="tab-panel" id="tab-postEvent" style="display:none;">
+<div class="tab-panel" id="tab-postEvent">
 
 <div class="banner">Post-event view: everyone who is a Salesforce Campaign Member of this event's 3 tracked campaigns, rolled up by account. Priority here reflects what's happened <b>since</b> the event -- an open opportunity, or real engagement -- not the pre-event attendee roster.</div>
 
