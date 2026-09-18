@@ -78,7 +78,8 @@
   .tab-btn.active { color: var(--text); border-bottom-color: var(--blue); }
 
   .funnel-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 0 3px 0; }
-  .funnel-row { height: 28px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 11px; font-weight: 600; border-radius: 4px; white-space: nowrap; }
+  .funnel-row { height: 28px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 11px; font-weight: 600; border-radius: 4px; white-space: nowrap; cursor: pointer; transition: filter .12s; }
+  .funnel-row:hover { filter: brightness(1.15); }
   .funnel-row .funnel-count { margin-left: 6px; font-weight: 700; }
   .funnel-row .funnel-pct { margin-left: 5px; font-weight: 400; opacity: .85; font-size: 9.5px; }
 
@@ -288,7 +289,7 @@ function compareOppStage(a, b) {
 // size) -- Leads first as the 100% baseline, then MEL/MQL/SAL, then real
 // Opportunity stages in pipeline order. Mirrors renderCombinedFunnel on
 // the Sales Priorities dashboard's Post-event tab.
-function renderFunnel(elId, entries) {
+function renderFunnel(elId, entries, onRowClick) {
   const el = document.getElementById(elId);
   if (!el) return;
   if (!entries.length) { el.innerHTML = '<div class="chart-empty">No leads yet.</div>'; return; }
@@ -303,11 +304,12 @@ function renderFunnel(elId, entries) {
     row.style.width = widthPct + '%';
     row.style.background = pipelineColorFor(stage, idx);
     row.innerHTML = esc(stage) + ' <span class="funnel-count">' + count + '</span><span class="funnel-pct">(' + pct + '% of ' + total + ')</span>';
+    if (onRowClick) row.addEventListener('click', () => onRowClick(stage));
     el.appendChild(row);
   });
 }
 
-function renderPieChart(canvasId, counts) {
+function renderPieChart(canvasId, counts, onSliceClick) {
   const ctx = document.getElementById(canvasId);
   if (!ctx) return;
   const labels = Object.keys(counts).sort((a,b) => counts[b]-counts[a]);
@@ -317,10 +319,15 @@ function renderPieChart(canvasId, counts) {
     ctx.parentElement.insertAdjacentHTML('beforeend', '<div class="chart-empty" data-for="' + canvasId + '">No data yet.</div>');
     return;
   }
+  ctx.style.cursor = onSliceClick ? 'pointer' : 'default';
   charts[canvasId] = new Chart(ctx, {
     type: 'doughnut',
     data: { labels, datasets: [{ data: labels.map(l => counts[l]), backgroundColor: labels.map((_,i)=>PALETTE[i % PALETTE.length]) }] },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: '#9aa2af', boxWidth: 10, font: { size: 9.5 } } } } }
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'right', labels: { color: '#9aa2af', boxWidth: 10, font: { size: 9.5 } } } },
+      onClick: onSliceClick ? (evt, elements) => { if (elements && elements.length) onSliceClick(labels[elements[0].index]); } : undefined,
+    }
   });
 }
 
@@ -614,7 +621,7 @@ function renderHubspotEngagement(data) {
   }
 }
 
-function renderBarChart(canvasId, counts, label) {
+function renderBarChart(canvasId, counts, label, onBarClick) {
   const ctx = document.getElementById(canvasId);
   if (!ctx) return;
   const labels = Object.keys(counts).sort((a,b) => counts[b]-counts[a]);
@@ -623,11 +630,15 @@ function renderBarChart(canvasId, counts, label) {
     ctx.parentElement.insertAdjacentHTML('beforeend', '<div class="chart-empty" data-for="' + canvasId + '">No data yet.</div>');
     return;
   }
+  ctx.style.cursor = onBarClick ? 'pointer' : 'default';
   charts[canvasId] = new Chart(ctx, {
     type: 'bar',
     data: { labels, datasets: [{ label, data: labels.map(l => counts[l]), backgroundColor: '#abbed9' }] },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
-      scales: { y: { beginAtZero: true, ticks: { color: '#9aa2af', precision: 0 }, grid: { color: '#23262d' } }, x: { ticks: { color: '#9aa2af' }, grid: { display: false } } } }
+    options: {
+      responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, ticks: { color: '#9aa2af', precision: 0 }, grid: { color: '#23262d' } }, x: { ticks: { color: '#9aa2af' }, grid: { display: false } } },
+      onClick: onBarClick ? (evt, elements) => { if (elements && elements.length) onBarClick(labels[elements[0].index]); } : undefined,
+    }
   });
 }
 
@@ -735,6 +746,18 @@ function renderDrillPanel(def) {
   panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
+// Shared row-shaping helpers reused by every clickable chart / funnel-row
+// drill-down below (via renderDrillPanel, same shared panel the KPI boxes
+// use).
+const LEAD_DRILL_COLUMNS = ['Company', 'First Name', 'Last Name', 'Title', 'Owner', 'Lifecycle Stage', 'Already Engaged'];
+function leadDrillRow(l) { return [l.company, l.first_name, l.last_name, l.title, l.owner, l.lifecycle_stage, l.company_already_engaged]; }
+
+const ACCOUNT_DRILL_COLUMNS = ['Company', 'Booth/Campaign Leads', 'Already Engaged', 'Has Open Opportunity', 'ABM Tier'];
+function accountDrillRow(a) { return [a.company, a.booth_scan_lead_count, a.company_already_engaged, a.has_open_opportunity ? 'Yes' : 'No', a.abm_tier || '\u2014']; }
+
+const OPP_DRILL_COLUMNS = ['Account', 'Owner', 'Amount', 'Stage', 'Origin', 'Created Date', 'Campaign'];
+function oppDrillRow(o) { return [o.account, o.owner, fmtMoney(o.amount), o.stage, o.origin, o.created_date, o.campaign]; }
+
 function renderCharts(leads, opps, accounts, byRep) {
   peLeads = leads || [];
   peOpps = opps || [];
@@ -742,19 +765,19 @@ function renderCharts(leads, opps, accounts, byRep) {
     <div class="charts-row">
       <div class="chart-card" style="flex: 1 1 100%;">
         <h3>Lead &amp; Opportunity lifecycle funnel</h3>
-        <div class="hint">Leads &rarr; MEL &rarr; MQL &rarr; SAL &rarr; real Salesforce Opportunity stages; bar width = share of the largest stage. Opportunity rows are rep-owned Opportunities created on/after 2026-09-15 only -- pre-existing deals that happen to match by domain are excluded.</div>
+        <div class="hint">Leads &rarr; MEL &rarr; MQL &rarr; SAL &rarr; real Salesforce Opportunity stages; bar width = share of the largest stage. Opportunity rows are rep-owned Opportunities created on/after 2026-09-15 only -- pre-existing deals that happen to match by domain are excluded. Click a stage bar for details.</div>
         <div class="funnel-wrap" id="personaFunnel"></div>
       </div>
     </div>
     <div class="charts-row">
-      <div class="chart-card"><h3>Company engagement</h3><div class="hint">Already-engaged vs. net-new companies</div><div class="chart-wrap pie-wrap"><canvas id="engageChart"></canvas></div></div>
-      <div class="chart-card"><h3>GTM persona breakdown</h3><div class="hint">Classified from job title (heuristic)</div><div class="chart-wrap pie-wrap"><canvas id="personaMixChart"></canvas></div></div>
-      <div class="chart-card"><h3>Net New vs. Existing Opportunities</h3><div class="hint">Net New = exact Lead Source + Created Date on/after 2026-09-15</div><div class="chart-wrap pie-wrap"><canvas id="oppOriginChart"></canvas></div></div>
+      <div class="chart-card"><h3>Company engagement</h3><div class="hint">Already-engaged vs. net-new companies &middot; click a slice for details</div><div class="chart-wrap pie-wrap"><canvas id="engageChart"></canvas></div></div>
+      <div class="chart-card"><h3>GTM persona breakdown</h3><div class="hint">Classified from job title (heuristic) &middot; click a slice for details</div><div class="chart-wrap pie-wrap"><canvas id="personaMixChart"></canvas></div></div>
+      <div class="chart-card"><h3>Net New vs. Existing Opportunities</h3><div class="hint">Net New = exact Lead Source + Created Date on/after 2026-09-15 &middot; click a slice for details</div><div class="chart-wrap pie-wrap"><canvas id="oppOriginChart"></canvas></div></div>
     </div>
     <div class="charts-row">
-      <div class="chart-card"><h3>Leads by rep</h3><div class="chart-wrap"><canvas id="repChart"></canvas></div></div>
-      <div class="chart-card"><h3>Lead lifecycle stage (bar)</h3><div class="chart-wrap"><canvas id="lifecycleChart"></canvas></div></div>
-      <div class="chart-card"><h3>Account tier mix</h3><div class="hint">Salesforce Account ABM_Tier__c field</div><div class="chart-wrap pie-wrap"><canvas id="tierChart"></canvas></div></div>
+      <div class="chart-card"><h3>Leads by rep</h3><div class="hint">Click a bar for details</div><div class="chart-wrap"><canvas id="repChart"></canvas></div></div>
+      <div class="chart-card"><h3>Lead lifecycle stage (bar)</h3><div class="hint">Click a bar for details</div><div class="chart-wrap"><canvas id="lifecycleChart"></canvas></div></div>
+      <div class="chart-card"><h3>Account tier mix</h3><div class="hint">Salesforce Account ABM_Tier__c field &middot; click a slice for details</div><div class="chart-wrap pie-wrap"><canvas id="tierChart"></canvas></div></div>
     </div>
 
     <details class="table-drop" open id="accountTableDrop">
@@ -790,13 +813,33 @@ function renderCharts(leads, opps, accounts, byRep) {
     ['In Progress (MQL)', mqlCount],
     ['In Progress (SAL)', salCount],
     ...oppStageEntries,
-  ]);
-  renderPieChart('engageChart', countBy(accounts, a => a.company_already_engaged === 'Yes' ? 'Already Engaged' : 'Net New'));
-  renderPieChart('personaMixChart', countBy(leads, l => classifyPersona(l.title)));
-  renderPieChart('oppOriginChart', countBy(opps, o => o.origin));
-  renderBarChart('repChart', Object.fromEntries(Object.entries(byRep).map(([rep, d]) => [rep, (d.leads || []).length])), 'Leads');
-  renderBarChart('lifecycleChart', countBy(leads, l => l.lifecycle_stage), 'Leads');
-  renderPieChart('tierChart', countBy(accounts, a => a.abm_tier || 'No tier set'));
+  ], stage => {
+    if (stage === 'Leads') {
+      renderDrillPanel({ title: 'Funnel: Leads (all)', rows: leads, columns: LEAD_DRILL_COLUMNS, mapRow: leadDrillRow });
+    } else if (stage === 'In Progress (MEL)' || stage === 'In Progress (MQL)' || stage === 'In Progress (SAL)') {
+      renderDrillPanel({ title: 'Funnel: ' + stage, rows: leads.filter(l => normalizeLeadStage(l.lifecycle_stage) === stage), columns: LEAD_DRILL_COLUMNS, mapRow: leadDrillRow });
+    } else {
+      renderDrillPanel({ title: 'Funnel: Opportunity stage \u2014 ' + stage, rows: postEventOpps.filter(o => (o.stage || 'Unknown') === stage), columns: OPP_DRILL_COLUMNS, mapRow: oppDrillRow });
+    }
+  });
+  renderPieChart('engageChart', countBy(accounts, a => a.company_already_engaged === 'Yes' ? 'Already Engaged' : 'Net New'), label => {
+    renderDrillPanel({ title: 'Company Engagement: ' + label, rows: accounts.filter(a => (a.company_already_engaged === 'Yes' ? 'Already Engaged' : 'Net New') === label), columns: ACCOUNT_DRILL_COLUMNS, mapRow: accountDrillRow });
+  });
+  renderPieChart('personaMixChart', countBy(leads, l => classifyPersona(l.title)), label => {
+    renderDrillPanel({ title: 'GTM Persona: ' + label, rows: leads.filter(l => classifyPersona(l.title) === label), columns: LEAD_DRILL_COLUMNS, mapRow: leadDrillRow });
+  });
+  renderPieChart('oppOriginChart', countBy(opps, o => o.origin), label => {
+    renderDrillPanel({ title: 'Opportunity Origin: ' + label, rows: opps.filter(o => o.origin === label), columns: OPP_DRILL_COLUMNS, mapRow: oppDrillRow });
+  });
+  renderBarChart('repChart', Object.fromEntries(Object.entries(byRep).map(([rep, d]) => [rep, (d.leads || []).length])), 'Leads', rep => {
+    renderDrillPanel({ title: 'Leads by Rep: ' + rep, rows: leads.filter(l => l.owner === rep), columns: LEAD_DRILL_COLUMNS, mapRow: leadDrillRow });
+  });
+  renderBarChart('lifecycleChart', countBy(leads, l => l.lifecycle_stage), 'Leads', stage => {
+    renderDrillPanel({ title: 'Lead Lifecycle Stage: ' + stage, rows: leads.filter(l => (l.lifecycle_stage || 'Unknown') === stage), columns: LEAD_DRILL_COLUMNS, mapRow: leadDrillRow });
+  });
+  renderPieChart('tierChart', countBy(accounts, a => a.abm_tier || 'No tier set'), label => {
+    renderDrillPanel({ title: 'Account Tier: ' + label, rows: accounts.filter(a => (a.abm_tier || 'No tier set') === label), columns: ACCOUNT_DRILL_COLUMNS, mapRow: accountDrillRow });
+  });
 
   if (leads.length) {
     new gridjs.Grid({
