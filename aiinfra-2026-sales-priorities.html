@@ -158,7 +158,7 @@
 <div class="page">
 
 <h1>AI Infra Summit 2026 — Sales Priorities <span class="sales-view-tag">(Sales View)</span></h1>
-<div class="subtitle">209 companies attending &middot; <span id="loadedAt"></span></div>
+<div class="subtitle"><span id="loadedAt"></span></div>
 
 <div class="tab-nav">
   <button class="tab-btn active" data-tab="priorities" onclick="showTab('priorities')">Pre Event</button>
@@ -609,7 +609,7 @@ async function initPriorities() {
     renderPriorityGrid('p2Grid', p2.map(a => compactAccountRow(a, ctx)), COMPACT_PRIORITY_COLUMNS);
     renderPriorityGrid('p3Grid', p3.map(u => compactAccountRow(u, ctx)), COMPACT_PRIORITY_COLUMNS);
 
-    document.getElementById('loadedAt').textContent = 'loaded ' + new Date().toLocaleString();
+    document.getElementById('loadedAt').textContent = 'Published ' + new Date().toLocaleString();
   } catch (err) {
     console.error(err);
     document.querySelector('#tab-priorities').insertAdjacentHTML('beforeend',
