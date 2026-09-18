@@ -589,7 +589,7 @@ function renderKpis(meta, accounts) {
     ['Already-Engaged Accounts', meta.companies_already_engaged ?? 0, 'someone at the company already talking to us'],
     ['Total Leads', meta.lead_count ?? 0, 'across all tracked reps'],
     ['Rep-owned Opportunities', meta.opp_count ?? 0, 'owned by the 4 tracked reps'],
-    ['Potential Pipeline', fmtMoney(meta.potential_pipeline_total), '$200K default per account without a real open Opportunity'],
+    ['Open Pipeline (Real)', fmtMoney(meta.potential_pipeline_real_open_opportunity_total), 'sum of actual open Opportunity amounts -- no $200K estimate included'],
   ];
   document.getElementById('mainContent').insertAdjacentHTML('beforeend',
     '<div class="kpi-row">' + kpis.map(([name, val, sub]) =>
@@ -667,8 +667,8 @@ function renderCharts(leads, opps, accounts, byRep) {
 
   if (accounts.length) {
     new gridjs.Grid({
-      columns: ['Company', 'Booth/Campaign Leads', 'Already Engaged', 'Has Open Opportunity', 'Potential Pipeline', 'ABM Tier'],
-      data: accounts.map(a => [a.company, a.booth_scan_lead_count, a.company_already_engaged, a.has_open_opportunity ? 'Yes' : 'No', fmtMoney(a.potential_pipeline_amount), a.abm_tier || '—']),
+      columns: ['Company', 'Booth/Campaign Leads', 'Already Engaged', 'Has Open Opportunity', 'Open Pipeline (Real)', 'ABM Tier'],
+      data: accounts.map(a => [a.company, a.booth_scan_lead_count, a.company_already_engaged, a.has_open_opportunity ? 'Yes' : 'No', a.potential_pipeline_basis === 'real_open_opportunity' ? fmtMoney(a.potential_pipeline_amount) : '—', a.abm_tier || '—']),
       search: true, sort: true, resizable: true, pagination: { limit: 25 },
       style: { table: { 'font-size': '11px' } },
     }).render(document.getElementById('accountGrid'));
