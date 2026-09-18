@@ -209,8 +209,8 @@
 
 <div class="kpi-row">
   <div class="kpi-card p1"><div class="name">Priority 1 — Open Opportunities</div><div class="stat-value" id="postP1Count">—</div><div class="stat-sub">accounts with a real deal already in motion</div></div>
-  <div class="kpi-card"><div class="name">Priority 2 — Engaged / Qualified</div><div class="stat-value" id="postP2Count">—</div><div class="stat-sub">no open deal yet, but a real signal since the event</div></div>
-  <div class="kpi-card p3"><div class="name">Priority 3 — Cold</div><div class="stat-value" id="postP3Count">—</div><div class="stat-sub">campaign member, no other signal yet</div></div>
+  <div class="kpi-card"><div class="name">Priority 2 — Already Engaged</div><div class="stat-value" id="postP2Count">—</div><div class="stat-sub">no open deal yet, but already talking to us</div></div>
+  <div class="kpi-card p3"><div class="name">Priority 3 — Cold</div><div class="stat-value" id="postP3Count">—</div><div class="stat-sub">net new, no prior engagement</div></div>
 </div>
 
 <h2 class="section">Priority 1 — Open Opportunities</h2>
@@ -220,22 +220,22 @@
   <div id="postP1Grid"></div>
 </details>
 
-<h2 class="section">Priority 2 — Engaged / Qualified</h2>
-<div class="section-sub">Second priority. No open deal yet, but the account is already engaged (an existing Contact, Opportunity or Lead) or has a persona who's progressed past initial lead stage.</div>
+<h2 class="section">Priority 2 — Already Engaged</h2>
+<div class="section-sub">Second priority. No open deal yet, but Salesforce shows an existing Contact, Opportunity, or other open Lead at this account from outside this campaign -- the same "already engaged" definition as the Post Event tab on aiinfra-2026.html.</div>
 <details class="table-drop">
   <summary>View accounts <span class="count-badge" id="postP2SummaryCount">—</span></summary>
   <div id="postP2Grid"></div>
 </details>
 
 <h2 class="section">Priority 3 — Cold</h2>
-<div class="section-sub">Third priority. A campaign member at this account, but no other engagement signal yet.</div>
+<div class="section-sub">Third priority. Net new -- no prior Opportunity, Contact, or open Lead at this account before this campaign.</div>
 <details class="table-drop">
   <summary>View accounts <span class="count-badge" id="postP3SummaryCount">—</span></summary>
   <div id="postP3Grid"></div>
 </details>
 
 <div class="footnote" id="postEventFootnote">
-  Sourced from data/account_summary.json -- one row per account (matched by website domain) among everyone who is a CampaignMember of this event's 3 tracked campaigns. Priority 1 = has an open Salesforce Opportunity. Priority 2 = no open opportunity, but either already engaged (an existing Contact, Opportunity, or other open Lead at that account predating this event) or a campaign member there has progressed past initial lead stage. Priority 3 = campaign member only, no other signal yet. GPU Segment / Industry / Account (SFDC) are blank for accounts with no matching Salesforce Account.
+  Sourced from data/account_summary.json -- one row per account (matched by website domain) among everyone who is a CampaignMember of this event's 3 tracked campaigns. Priority 1 = has an open Salesforce Opportunity. Priority 2 = no open opportunity, but company_already_engaged is "Yes" (an existing Contact, Opportunity, or other open Lead at that account from outside this campaign). Priority 3 = everything else (net new). These three counts add up to the same 256/107/149 split as the Already-Engaged Accounts / Net-New Companies KPIs on aiinfra-2026.html's Post Event tab, since both pages read the same account_summary.json. GPU Segment / Industry / Account (SFDC) are blank for accounts with no matching Salesforce Account.
 </div>
 
 </div>
@@ -671,8 +671,8 @@ async function initPostEvent() {
     const summary = await fetchJson('data/account_summary.json');
 
     const p1 = summary.filter(a => a.has_open_opportunity);
-    const p2 = summary.filter(a => !a.has_open_opportunity && (a.company_already_engaged || a.is_qualified_contact));
-    const p3 = summary.filter(a => !a.has_open_opportunity && !a.company_already_engaged && !a.is_qualified_contact);
+    const p2 = summary.filter(a => !a.has_open_opportunity && a.company_already_engaged === 'Yes');
+    const p3 = summary.filter(a => !a.has_open_opportunity && a.company_already_engaged !== 'Yes');
 
     document.getElementById('postP1Count').textContent = p1.length;
     document.getElementById('postP2Count').textContent = p2.length;
