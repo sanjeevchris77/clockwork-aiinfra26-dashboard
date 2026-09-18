@@ -675,6 +675,64 @@ function renderKpis(meta, accounts) {
   );
 }
 
+// Row shaping for the "Accounts with Open Opportunity" drill-down --
+// mirrors the Post-event Sales Priority table's column set on
+// aiinfra-2026-sales-priorities.html (same account_summary.json).
+function multiLinkCell(items) {
+  if (!items.length) return '\u2014';
+  const parts = items.map(({ label, link }) =>
+    link ? `<a href="${esc(link)}" target="_blank" rel="noopener" style="color:var(--blue)">${esc(label)}</a>` : esc(label)
+  );
+  return gridjs.html(parts.join('<br>'));
+}
+function attendeesLinkCell(personas) {
+  return multiLinkCell((personas || []).map(p => ({ label: p.title ? `${p.name} (${p.title})` : p.name, link: p.sfdc_link })));
+}
+const LIFECYCLE_STAGE_RANK = { 'In Progress (SAL)': 3, 'In Progress (MQL)': 2, 'In Progress (MEL)': 1 };
+function bestPersonaOf(personas) {
+  if (!personas || !personas.length) return null;
+  return personas.slice().sort((a, b) =>
+    (LIFECYCLE_STAGE_RANK[normalizeLeadStage(b.lifecycle_stage)] || 0) - (LIFECYCLE_STAGE_RANK[normalizeLeadStage(a.lifecycle_stage)] || 0)
+  )[0];
+}
+function bestContactCell(personas) {
+  const best = bestPersonaOf(personas);
+  if (!best) return '\u2014';
+  return multiLinkCell([{ label: best.title ? `${best.name} (${best.title})` : best.name, link: best.sfdc_link }]);
+}
+function accountStageCell(a) {
+  const openOpps = (a.existing_opportunities_all_owners || []).filter(o => o.is_open);
+  if (openOpps.length) return gridjs.html(openOpps.map(o => esc(o.stage || 'Open')).join('<br>'));
+  const stages = Object.entries(a.lifecycle_stage_counts || {});
+  if (!stages.length) return 'No Open Opportunity';
+  return gridjs.html(stages.map(([stage, count]) => esc(stage) + (count > 1 ? ' x' + count : '')).join('<br>'));
+}
+function accountOpportunitiesCell(a) {
+  const opps = (a.existing_opportunities_all_owners || []).slice().sort((x, y) => (y.is_open ? 1 : 0) - (x.is_open ? 1 : 0));
+  return multiLinkCell(opps.map(o => {
+    const stagePart = o.stage ? ` (${o.stage})` : '';
+    const closedPart = o.is_open ? '' : ' (Closed)';
+    return { label: `${o.account || 'Opportunity'}${stagePart}${closedPart}`, link: o.sfdc_link };
+  }));
+}
+const OPEN_OPP_DRILL_COLUMNS = ['Account', 'Attendee(s)', 'Owner', 'GPU Segment', 'Industry', 'Stage', 'Best Contact', 'Sourced Campaign', 'First Touch', 'Last Touch', 'Account (SFDC)', 'Opportunity (SFDC)'];
+function openOppDrillRow(a) {
+  return [
+    a.company,
+    attendeesLinkCell(a.personas),
+    a.owner || '\u2014',
+    a.gpu_segment || '\u2014',
+    a.industry || '\u2014',
+    accountStageCell(a),
+    bestContactCell(a.personas),
+    (a.campaigns || []).join(', ') || '\u2014',
+    fmtDate(a.first_touch),
+    fmtDate(a.last_touch),
+    sfdcLinkCell(a.account_sfdc_link),
+    accountOpportunitiesCell(a),
+  ];
+}
+
 // Click-through definitions for the 5 clickable KPI boxes above. Each opens
 // the same shared inline drill-down panel (kpiDrillPanel) right below the
 // KPI row -- same details.table-drop visual pattern used elsewhere on this
@@ -708,8 +766,8 @@ function showKpiDrill(key) {
     openOpp: {
       title: 'Accounts with Open Opportunity',
       rows: peAccounts.filter(a => a.has_open_opportunity),
-      columns: ['Company', 'Open Pipeline (Real)', 'ABM Tier'],
-      mapRow: a => [a.company, a.potential_pipeline_basis === 'real_open_opportunity' ? fmtMoney(a.potential_pipeline_amount) : '\u2014', a.abm_tier || '\u2014'],
+      columns: OPEN_OPP_DRILL_COLUMNS,
+      mapRow: openOppDrillRow,
     },
   };
   renderDrillPanel(defs[key]);
