@@ -53,6 +53,9 @@
   .kpi-card .name { font-weight: 600; font-size: 10px; margin-bottom: 4px; color: var(--text-faint); text-transform: uppercase; letter-spacing: .03em; }
   .kpi-card .stat-value { font-size: 17px; font-weight: 700; color: var(--text); }
   .kpi-card .stat-sub { font-size: 10px; color: var(--text-faint); margin-top: 2px; }
+  .kpi-card.clickable { cursor: pointer; transition: border-color .12s, background .12s; }
+  .kpi-card.clickable:hover { border-color: var(--blue); background: var(--bg-2); }
+  .kpi-card.clickable .name::after { content: " \25be"; opacity: .6; }
   .charts-row { display: flex; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
   .chart-card { flex: 1; min-width: 230px; background: var(--bg-1); border: 1px solid var(--border); border-radius: 8px; padding: 9px 11px; }
   .chart-card h3 { font-size: 10px; margin: 0 0 1px 0; color: var(--text); font-weight: 600; }
@@ -163,6 +166,9 @@ const RAW_BASE = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/$
 const REPORT_2025_ID = '00OTV00000RZK4O2AX';
 
 const charts = {};
+let peAccounts = [];
+let peLeads = [];
+let peOpps = [];
 
 function toggleInfoPopover(id) {
   const el = document.getElementById(id);
@@ -583,7 +589,14 @@ function renderBarChart(canvasId, counts, label) {
   });
 }
 
+function kpiCardHtml(name, val, sub, key) {
+  const cls = key ? 'kpi-card clickable' : 'kpi-card';
+  const click = key ? ' onclick="showKpiDrill(\'' + key + '\')"' : '';
+  return '<div class="' + cls + '"' + click + '><div class="name">' + esc(name) + '</div><div class="stat-value">' + esc(val) + '</div><div class="stat-sub">' + esc(sub) + '</div></div>';
+}
+
 function renderKpis(meta, accounts) {
+  peAccounts = accounts || [];
   // Accounts with Open Opportunity: any owner, not just the 4 tracked reps
   // -- accounts.has_open_opportunity is already computed this way in
   // sync_salesforce.py (opps_all_owners_by_domain, any owner), so this is
@@ -596,21 +609,93 @@ function renderKpis(meta, accounts) {
   // outside that list.
   const accountsWithOpenOpp = (accounts || []).filter(a => a.has_open_opportunity).length;
   const kpis = [
-    ['Distinct Companies', meta.distinct_companies ?? 0, 'unique accounts on this campaign'],
-    ['Net-New Companies', meta.companies_net_new ?? 0, 'no prior Opportunity, Contact, or open Lead'],
-    ['Already-Engaged Accounts', meta.companies_already_engaged ?? 0, 'someone at the company already talking to us'],
-    ['Total Leads', meta.lead_count ?? 0, 'across all tracked reps'],
-    ['Accounts with Open Opportunity', accountsWithOpenOpp, 'any owner -- matches Priority 1 on the Sales Priorities dashboard'],
-    ['Open Pipeline (Real)', fmtMoney(meta.potential_pipeline_real_open_opportunity_total), 'sum of actual open Opportunity amounts -- no $200K estimate included'],
+    ['Distinct Companies', meta.distinct_companies ?? 0, 'unique accounts on this campaign', 'distinctCompanies'],
+    ['Net-New Companies', meta.companies_net_new ?? 0, 'no prior Opportunity, Contact, or open Lead', 'netNew'],
+    ['Already-Engaged Accounts', meta.companies_already_engaged ?? 0, 'someone at the company already talking to us', 'alreadyEngaged'],
+    ['Total Leads', meta.lead_count ?? 0, 'across all tracked reps', 'totalLeads'],
+    ['Accounts with Open Opportunity', accountsWithOpenOpp, 'any owner -- matches Priority 1 on the Sales Priorities dashboard', 'openOpp'],
+    ['Open Pipeline (Real)', fmtMoney(meta.potential_pipeline_real_open_opportunity_total), 'sum of actual open Opportunity amounts -- no $200K estimate included', null],
   ];
   document.getElementById('mainContent').insertAdjacentHTML('beforeend',
-    '<div class="kpi-row">' + kpis.map(([name, val, sub]) =>
-      '<div class="kpi-card"><div class="name">' + esc(name) + '</div><div class="stat-value">' + esc(val) + '</div><div class="stat-sub">' + esc(sub) + '</div></div>'
-    ).join('') + '</div>'
+    '<div class="kpi-row">' + kpis.map(([name, val, sub, key]) => kpiCardHtml(name, val, sub, key)).join('') + '</div>' +
+    '<details class="table-drop" id="kpiDrillPanel" style="display:none;"><summary id="kpiDrillSummary">Details</summary><div id="kpiDrillGrid"></div></details>'
   );
 }
 
+// Click-through definitions for the 5 clickable KPI boxes above. Each opens
+// the same shared inline drill-down panel (kpiDrillPanel) right below the
+// KPI row -- same details.table-drop visual pattern used elsewhere on this
+// page, no navigation/scroll to a separate table.
+function showKpiDrill(key) {
+  const defs = {
+    distinctCompanies: {
+      title: 'Distinct Companies',
+      rows: peAccounts,
+      columns: ['Company', 'Already Engaged', 'Has Open Opportunity', 'Booth/Campaign Leads', 'ABM Tier'],
+      mapRow: a => [a.company, a.company_already_engaged, a.has_open_opportunity ? 'Yes' : 'No', a.booth_scan_lead_count, a.abm_tier || '\u2014'],
+    },
+    netNew: {
+      title: 'Net-New Companies',
+      rows: peAccounts.filter(a => a.company_already_engaged !== 'Yes'),
+      columns: ['Company', 'Booth/Campaign Leads', 'Has Open Opportunity', 'ABM Tier'],
+      mapRow: a => [a.company, a.booth_scan_lead_count, a.has_open_opportunity ? 'Yes' : 'No', a.abm_tier || '\u2014'],
+    },
+    alreadyEngaged: {
+      title: 'Already-Engaged Accounts',
+      rows: peAccounts.filter(a => a.company_already_engaged === 'Yes'),
+      columns: ['Company', 'Booth/Campaign Leads', 'Has Open Opportunity', 'ABM Tier'],
+      mapRow: a => [a.company, a.booth_scan_lead_count, a.has_open_opportunity ? 'Yes' : 'No', a.abm_tier || '\u2014'],
+    },
+    totalLeads: {
+      title: 'Total Leads',
+      rows: peLeads,
+      columns: ['Company', 'First Name', 'Last Name', 'Title', 'Owner', 'Lifecycle Stage'],
+      mapRow: l => [l.company, l.first_name, l.last_name, l.title, l.owner, l.lifecycle_stage],
+    },
+    openOpp: {
+      title: 'Accounts with Open Opportunity',
+      rows: peAccounts.filter(a => a.has_open_opportunity),
+      columns: ['Company', 'Open Pipeline (Real)', 'ABM Tier'],
+      mapRow: a => [a.company, a.potential_pipeline_basis === 'real_open_opportunity' ? fmtMoney(a.potential_pipeline_amount) : '\u2014', a.abm_tier || '\u2014'],
+    },
+  };
+  renderDrillPanel(defs[key]);
+}
+
+// Generic drill-down renderer, reused by the KPI boxes above and by the
+// clickable charts below. Rebuilds the grid target from scratch each call
+// (replaceWith a fresh element) to sidestep gridjs's stale-render-on-reuse
+// bug, same pattern used everywhere else on this page.
+function renderDrillPanel(def) {
+  if (!def) return;
+  const panel = document.getElementById('kpiDrillPanel');
+  if (!panel) return;
+  panel.style.display = '';
+  panel.open = true;
+  document.getElementById('kpiDrillSummary').innerHTML =
+    esc(def.title) + ' <span class="drop-count">\u2014 ' + def.rows.length + (def.rows.length === 1 ? ' record' : ' records') + '</span>';
+
+  const old = document.getElementById('kpiDrillGrid');
+  const fresh = document.createElement('div');
+  fresh.id = 'kpiDrillGrid';
+  old.replaceWith(fresh);
+
+  if (def.rows.length) {
+    new gridjs.Grid({
+      columns: def.columns,
+      data: def.rows.map(def.mapRow),
+      search: true, sort: true, resizable: true, pagination: { limit: 25 },
+      style: { table: { 'font-size': '11px' } },
+    }).render(fresh);
+  } else {
+    fresh.innerHTML = '<div class="chart-empty" style="height:60px;">No records.</div>';
+  }
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
 function renderCharts(leads, opps, accounts, byRep) {
+  peLeads = leads || [];
+  peOpps = opps || [];
   const html = `
     <div class="charts-row">
       <div class="chart-card" style="flex: 1 1 100%;">
