@@ -686,11 +686,19 @@ function companyCell(company, link) {
 }
 
 function renderMinimalReportTable(elId, parsed) {
-  const el = document.getElementById(elId);
-  // gridjs.Grid#render() requires an empty container -- it silently refuses
-  // (logs "container element is not empty" and leaves existing content, e.g.
-  // "Loading…", on screen forever) if we don't clear it first.
-  el.innerHTML = '';
+  const old = document.getElementById(elId);
+  // gridjs.Grid#render() requires an empty container, but clearing the old
+  // one with innerHTML = '' isn't enough when this runs more than once on
+  // the same container (e.g. every time the report dropdown changes):
+  // gridjs's own render state stays attached to that DOM node even after
+  // its children are wiped, so a second `new gridjs.Grid(...).render(el)`
+  // call silently keeps showing the FIRST grid's data forever -- this is
+  // what made switching AE/Contact reports in the dropdown look "stuck" on
+  // whichever report loaded first. Swapping in a brand-new container
+  // element for every render avoids that.
+  const el = document.createElement('div');
+  el.id = elId;
+  old.replaceWith(el);
   if (!parsed || !parsed.rows.length) {
     el.innerHTML = '<div class="chart-empty">No rows in this report yet.</div>';
     return;
