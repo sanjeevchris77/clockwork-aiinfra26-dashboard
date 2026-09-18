@@ -294,7 +294,7 @@ const EVENT_START_DATE = '2026-09-15';
 // Book-a-Demo landing page + outreach list instead.
 const EVENT_ATTENDING_REPS = ['Greg Mark'];
 
-// The 4 ad-hoc "AE assigned per booth lead" reports and the 4 ad-hoc contact
+// The ad-hoc "AE assigned per booth lead" reports and matching contact
 // reports named for this dashboard -- raw Salesforce Reports (Analytics REST
 // API), fetched non-fatally by the sync workflow (see
 // ae_pipeline_report_ids / contact_report_ids in events/aiinfra26/config.json)
@@ -304,12 +304,14 @@ const AE_PIPELINE_REPORT_IDS = [
   '00OTV00000TXatd2AD',
   '00OTV00000TXaIY2A1',
   '00OTV00000TXTvO2AX',
+  '00OTV00000TZnzf2AD',
 ];
 const CONTACT_REPORT_IDS = [
   '00OTV00000TXbJR2A1',
   '00OTV00000TXbOH2A1',
   '00OTV00000TXbRV2A1',
   '00OTV00000TXbUj2AL',
+  '00OTV00000TaGX12AN',
 ];
 
 // Each id above is one AE's report (confirmed against each report's own
@@ -321,12 +323,14 @@ const AE_PIPELINE_AE_NAMES = {
   '00OTV00000TXatd2AD': 'Joe',
   '00OTV00000TXaIY2A1': 'Sean',
   '00OTV00000TXTvO2AX': 'Chris',
+  '00OTV00000TZnzf2AD': 'Abrahem',
 };
 const CONTACT_AE_NAMES = {
   '00OTV00000TXbJR2A1': 'Greg',
   '00OTV00000TXbOH2A1': 'Sean',
   '00OTV00000TXbRV2A1': 'Chris',
   '00OTV00000TXbUj2AL': 'Joe',
+  '00OTV00000TaGX12AN': 'Abrahem',
 };
 
 function esc(s) {
