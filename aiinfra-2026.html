@@ -164,6 +164,7 @@ const REPO_NAME = 'clockwork-sfdc-sync-aiinfra26';
 const REPO_BRANCH = 'main';
 const RAW_BASE = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${REPO_BRANCH}/`;
 const REPORT_2025_ID = '00OTV00000RZK4O2AX';
+const EVENT_START_DATE = '2026-09-15';
 
 const charts = {};
 let peAccounts = [];
@@ -231,35 +232,76 @@ function countBy(rows, fn) {
 
 const PALETTE = ['#abbed9','#d1cae7','#83b7a4','#ccb886','#e1bbbb','#7dd3fc','#f0abfc','#86efac','#fcd34d','#fca5a5'];
 
-const FUNNEL_ROW_COLORS = {
+// Leads -> MEL -> MQL -> SAL -> real Salesforce Opportunity stages, all in
+// one funnel -- mirrors the combined funnel on the Sales Priorities
+// dashboard's Post-event Sales Priority tab (same colors, same
+// stage-normalization logic), so the two dashboards read the same way.
+const PIPELINE_COLORS = {
   'Leads': '#3b4252',
-  'Marketing Engaged Lead': '#3a4a63',
-  'Marketing Qualified Lead': '#2c5c7a',
-  'Sales Accepted Lead': '#1f6f5c',
-  'Sales Qualified Lead': '#1a7a4f',
+  'In Progress (MEL)': '#3a4a63',
+  'In Progress (MQL)': '#2c5c7a',
+  'In Progress (SAL)': '#1f6f5c',
 };
-function funnelColorFor(stage) {
-  return FUNNEL_ROW_COLORS[stage] || '#3b4252';
+const PIPELINE_FALLBACK_COLORS = ['#c99a6a', '#c2ac5c', '#a99bd0', '#6fae9e', '#c090ab', '#8fbf8f', '#c17d7d'];
+function pipelineColorFor(stage, idx) {
+  if (PIPELINE_COLORS[stage]) return PIPELINE_COLORS[stage];
+  const low = stage.toLowerCase();
+  if (low.includes('won')) return '#8fbf8f';
+  if (low.includes('lost')) return '#c17d7d';
+  return PIPELINE_FALLBACK_COLORS[idx % PIPELINE_FALLBACK_COLORS.length];
 }
 
-function renderFunnel(elId, stageCounts) {
+// Real Salesforce Lead Status varies (e.g. "In Progress (MEL)") or falls
+// back to a heuristic label ("Marketing Engaged Lead") when Status isn't
+// set -- see classify_lifecycle() in sync_salesforce.py. Normalize both to
+// the same funnel row so the stage taxonomy stays stable regardless of
+// which path produced it.
+function normalizeLeadStage(stage) {
+  if (!stage) return 'Unknown';
+  const s = stage.toLowerCase();
+  if (s.includes('(sal)')) return 'In Progress (SAL)';
+  if (s.includes('(mql)')) return 'In Progress (MQL)';
+  if (s.includes('(mel)')) return 'In Progress (MEL)';
+  if (s === 'marketing qualified lead') return 'In Progress (MQL)';
+  if (s === 'marketing engaged lead') return 'In Progress (MEL)';
+  return stage;
+}
+
+// Opportunity StageName values are whatever this org's real Salesforce
+// pipeline uses -- not hardcoded here. Numbered stages ("00 - Prospecting",
+// "01 - Qualified", ...) sort naturally by their own text; Won/Lost are
+// pinned to the end regardless of exact wording.
+function compareOppStage(a, b) {
+  const rank = s => {
+    const low = s.toLowerCase();
+    if (/^\d\d\s*-/.test(s)) return 0;
+    if (low.includes('won')) return 1;
+    if (low.includes('lost')) return 2;
+    return -1;
+  };
+  const ra = rank(a), rb = rank(b);
+  if (ra !== rb) return ra - rb;
+  return a.localeCompare(b);
+}
+
+// entries: [[label, count], ...] in FIXED display order (not sorted by
+// size) -- Leads first as the 100% baseline, then MEL/MQL/SAL, then real
+// Opportunity stages in pipeline order. Mirrors renderCombinedFunnel on
+// the Sales Priorities dashboard's Post-event tab.
+function renderFunnel(elId, entries) {
   const el = document.getElementById(elId);
   if (!el) return;
-  const keys = Object.keys(stageCounts);
-  if (!keys.length) { el.innerHTML = '<div class="chart-empty">No leads yet.</div>'; return; }
-  const hasLeads = Object.prototype.hasOwnProperty.call(stageCounts, 'Leads');
-  const total = hasLeads ? stageCounts['Leads'] : Object.values(stageCounts).reduce((a,b) => a+b, 0);
-  const order = keys.slice().sort((a,b) => stageCounts[b] - stageCounts[a]);
-  const maxCount = Math.max(...order.map(k => stageCounts[k]));
+  if (!entries.length) { el.innerHTML = '<div class="chart-empty">No leads yet.</div>'; return; }
+  const total = entries[0][1] || 1;
+  const maxCount = Math.max(...entries.map(([, c]) => c), 1);
   el.innerHTML = '';
-  order.forEach(stage => {
-    const count = stageCounts[stage];
+  entries.forEach(([stage, count], idx) => {
     const pct = total ? Math.round((count / total) * 100) : 0;
-    const widthPct = maxCount ? Math.round(32 + (count / maxCount) * 60) : 32;
+    const widthPct = Math.round(32 + (count / maxCount) * 60);
     const row = document.createElement('div');
     row.className = 'funnel-row';
     row.style.width = widthPct + '%';
-    row.style.background = funnelColorFor(stage);
+    row.style.background = pipelineColorFor(stage, idx);
     row.innerHTML = esc(stage) + ' <span class="funnel-count">' + count + '</span><span class="funnel-pct">(' + pct + '% of ' + total + ')</span>';
     el.appendChild(row);
   });
@@ -699,8 +741,8 @@ function renderCharts(leads, opps, accounts, byRep) {
   const html = `
     <div class="charts-row">
       <div class="chart-card" style="flex: 1 1 100%;">
-        <h3>Lead lifecycle funnel</h3>
-        <div class="hint">Leads &rarr; MEL &rarr; MQL &rarr; SAL, based on real Salesforce Lead Status (or a best-effort keyword classification when Status isn't set); bar width = share of the largest stage.</div>
+        <h3>Lead &amp; Opportunity lifecycle funnel</h3>
+        <div class="hint">Leads &rarr; MEL &rarr; MQL &rarr; SAL &rarr; real Salesforce Opportunity stages; bar width = share of the largest stage. Opportunity rows are rep-owned Opportunities created on/after 2026-09-15 only -- pre-existing deals that happen to match by domain are excluded.</div>
         <div class="funnel-wrap" id="personaFunnel"></div>
       </div>
     </div>
@@ -732,7 +774,23 @@ function renderCharts(leads, opps, accounts, byRep) {
   `;
   document.getElementById('mainContent').insertAdjacentHTML('beforeend', html);
 
-  renderFunnel('personaFunnel', countBy(leads, l => l.lifecycle_stage));
+  const melCount = leads.filter(l => normalizeLeadStage(l.lifecycle_stage) === 'In Progress (MEL)').length;
+  const mqlCount = leads.filter(l => normalizeLeadStage(l.lifecycle_stage) === 'In Progress (MQL)').length;
+  const salCount = leads.filter(l => normalizeLeadStage(l.lifecycle_stage) === 'In Progress (SAL)').length;
+  const postEventOpps = (opps || []).filter(o => o.created_date && o.created_date.slice(0, 10) >= EVENT_START_DATE);
+  const oppStageCounts = {};
+  postEventOpps.forEach(o => {
+    const stage = o.stage || 'Unknown';
+    oppStageCounts[stage] = (oppStageCounts[stage] || 0) + 1;
+  });
+  const oppStageEntries = Object.keys(oppStageCounts).sort(compareOppStage).map(s => [s, oppStageCounts[s]]);
+  renderFunnel('personaFunnel', [
+    ['Leads', leads.length],
+    ['In Progress (MEL)', melCount],
+    ['In Progress (MQL)', mqlCount],
+    ['In Progress (SAL)', salCount],
+    ...oppStageEntries,
+  ]);
   renderPieChart('engageChart', countBy(accounts, a => a.company_already_engaged === 'Yes' ? 'Already Engaged' : 'Net New'));
   renderPieChart('personaMixChart', countBy(leads, l => classifyPersona(l.title)));
   renderPieChart('oppOriginChart', countBy(opps, o => o.origin));
